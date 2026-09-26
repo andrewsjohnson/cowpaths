@@ -1,7 +1,7 @@
 import { clamp, hash, lerp, pointAt, random, frameAt } from './math.mjs';
 import { monthIndex, monthString } from './data.mjs';
 import { buildScene as buildLegacyScene } from './scene-v1.mjs';
-export const RENDERER_VERSION = '1.1.0';
+export const RENDERER_VERSION = '1.2.0';
 export const DEFAULTS = Object.freeze({ seed: 'VITL-2026', glow: .65, exposure: 1, focus: .06, aperture: .55, turbulence: .55, spread: 1, labels: true, poster: true, maxSubmissions: 1800, through: 1, palette: 'vitl', rendererVersion: RENDERER_VERSION });
 export const PALETTES = { vitl: ['#d5fff0', '#74ebc5', '#c3f666', '#f4f5c9'], glacial: ['#ddfaff', '#70caff', '#a9abea', '#f0efdd'], ember: ['#fff1d7', '#feb276', '#f37e63', '#d7d19d'] };
 const smooth = x => { const u = clamp(x); return u * u * (3 - 2 * u); };
@@ -15,7 +15,7 @@ export function spine(t, lane = 0) {
 // Integrate the inherited heading and curvature. Unlike a destination Bezier,
 // this cannot turn back merely to hit a composition target. Curvature eases
 // from the parent to a gently curling free trajectory over a finite distance.
-export function traceBranch(frame, length, rng, settings, targetCurvature, depth = 0, main = false) {
+export function traceBranch(frame, length, rng, settings, targetCurvature, depth = 0, main = false, motion = null) {
   const points = [[...frame.position]], steps = Math.max(18, Math.ceil(length / .00125)), ds = length / steps;
   const blend = Math.min(length * .38, main ? .018 + rng() * .014 : .023);
   const phase = rng() * Math.PI * 2, depthBlend = Math.min(.04, length * .35);
@@ -26,10 +26,11 @@ export function traceBranch(frame, length, rng, settings, targetCurvature, depth
     const distance = (i - 1) * ds, u = clamp(distance / blend);
     const inherited = distance < blend ? distance - blend * (u*u*u - .5*u*u*u*u) : blend * .5;
     const free = distance - inherited;
-    const tip = main ? Math.max(0, distance - .16) : free;
+    const tip = main ? Math.max(0, distance - (motion?.onset ?? .16)) : free;
     const heading = frame.heading + frame.curvature * inherited
-      + targetCurvature * (main ? tip * smooth(tip / .16) : free)
+      + targetCurvature * (main ? tip * smooth(tip / (motion ? .10 : .16)) : free)
       + focusTurn * smooth(distance / .15)
+      + (motion ? motion.sweep * smooth(distance / motion.release) + motion.wave * Math.sin(distance * 13) * smooth(distance / .09) : 0)
       + settings.turbulence * .045 * Math.sin(distance * 16 + phase) * smooth(distance / .06);
     x += Math.cos(heading) * ds; y += Math.sin(heading) * ds;
     const s = i * ds, v = clamp(s / depthBlend);
@@ -67,9 +68,16 @@ export function buildScene(history, requested = {}) {
     const volume = submission.fulfillments.reduce((sum, f) => sum + f.recipients.reduce((s, r) => s + r.medicationCount, 0), 0);
     const color = palette[submission.type === 'stock' ? 0 : hash(submission.clinicId) % 3 === 0 ? 2 : 1];
     const z = hash(submission.id) % 17 === 0 ? .5 + rng() * .45 : (rng() - .46) * .45, loose = hash(submission.id) % 5 === 0;
+    // Separate seeded flow groups add opposing sweeps without destination targets.
+    // Preserve RNG consumption and geometry for saved 1.1 studies.
+    const lively = settings.rendererVersion === '1.2.0';
+    const flow = random(`${settings.seed}/${submission.id}/flow`), family = hash(submission.clinicId) % 3 - 1;
+    const motion = lively ? { sweep: family * 1.3 + .42 * Math.sin(t * 10 + .6), release: .10 + flow() * .045, onset: .055 + flow() * .10, wave: (flow() - .5) * .35 } : null;
+    const reach = lively ? .55 + Math.pow(flow(), .7) * 1.1 : 1;
+    const curl = lively ? (loose ? -6 : family * 4 + 2) + 1.5 * Math.sin(t * 10) : (loose ? -7 : 4.5) + 4 * Math.sin(t * 10);
     const track = add({ id: submission.id, parentId: clinic.id, kind: 'submission', month: submission.month, type: submission.type,
-      color, parentFraction, alpha: (loose ? .11 : .16) + rng() * .21, width: .00024 + rng() * .00026,
-      points: traceBranch(frame, (.13 + Math.pow(rng(), 1.05) * (.54 - .20 * t) + Math.log1p(volume) * .016) * settings.spread, rng, settings, (loose ? -7 : 4.5) + 4 * Math.sin(t * 10), z, true) });
+      color, parentFraction, alpha: ((loose ? .11 : .16) + rng() * .21) * (lively ? .85 : 1), width: .00024 + rng() * .00026,
+      points: traceBranch(frame, (.13 + Math.pow(rng(), 1.05) * (.54 - .20 * t) + Math.log1p(volume) * .016) * settings.spread * reach, rng, settings, curl, lively ? z * 1.5 : z, true, motion) });
     events.push({ id: submission.id, t, origin, anchor: pointAt(track.points, .68), clinicId: clinic.id, month: submission.month });
     submission.fulfillments.forEach((fulfillment, fi) => {
       const fr = random(`${settings.seed}/${submission.id}/fulfillment/${fi}`), fork = .5 + fr() * .36;

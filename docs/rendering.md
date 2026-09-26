@@ -4,7 +4,9 @@
 
 The reference is a square editorial print with a near-black green atmosphere, a compact asymmetric spiral, curving outward streams, fine branching detail, mint/citron/ivory light, selective glow and foreground defocus. The artwork is generated procedurally; the reference is not embedded and no generated background image is used.
 
-Renderer 1.1 replaces the large central spiral with a small curl that gradually unwinds into the upper-right stream. Branches follow that stream before separating. Recent activity adds density along its later stretch. There are no fixed destination corridors pulling strands back across their parent flow.
+The revised geometry replaces the large central spiral with a small curl that gradually unwinds into the upper-right stream. Branches follow that stream before separating. Recent activity adds density along its later stretch. There are no fixed destination corridors pulling strands back across their parent flow.
+
+Renderer 1.2 adds three seeded flow groups with opposing sweeps, variable curl onset and strand reach, and stronger depth separation. Smooth release preserves the inherited heading at every junction. Fine secondary branches overlap broad arcs with different lengths, breaking up the single dominant plume. These flow groups are composition choices, not measured business categories. No extra submissions or branches are invented.
 
 ## Geometry
 
@@ -27,7 +29,7 @@ The master is square. The poster reserves its bottom 16% for reading instruction
 
 Exports redraw the same paths and lights at the selected resolution, not an enlarged screenshot. PNG `pHYs` metadata specifies 300 dpi. A 7,200-pixel image is 24 inches at 300 dpi or 30 inches at 240 dpi. The browser produces RGB PNG, not a printer-specific color separation. Verify a proof with the intended paper and printing service. The largest export may exceed a mobile browser's memory, so smaller export options remain available.
 
-New projects use renderer 1.1.0. Saved 1.0.0 projects retain their original geometry through a frozen compatibility module; **Reset style** adopts the current renderer. Project files reproduce geometry and settings for the indicated renderer version. Font rasterization and Canvas antialiasing can vary by browser and operating system; byte-identical PNGs across engines are not promised. System sans-serif fonts are used without network font requests.
+New projects use renderer 1.2.0. Saved 1.0.0 and 1.1.0 projects retain their original geometry; **Reset style** adopts the current renderer. Project files reproduce geometry and settings for the indicated renderer version. Font rasterization and Canvas antialiasing can vary by browser and operating system; byte-identical PNGs across engines are not promised. System sans-serif fonts are used without network font requests.
 
 ## Verification
 

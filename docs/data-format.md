@@ -91,6 +91,6 @@ The adapter deliberately does not guess a database query. Select production tabl
 
 ## Projects
 
-**Save project** writes a `cowpaths-project` object with version 1, renderer version 1.1.0 for new studies, validated history and composition settings. Reopen it with the same input control. It contains a copy of the history. No browser storage is used, so save before closing the tab if you want to retain your study.
+**Save project** writes a `cowpaths-project` object with version 1, renderer version 1.2.0 for new studies, validated history and composition settings. Reopen it with the same input control. It contains a copy of the history. No browser storage is used, so save before closing the tab if you want to retain your study.
 
-Projects saved with renderer 1.0.0 reopen with their original flow. Choose **Reset style** to adopt the current geometry and default composition settings, then save a new project. Unsupported or conflicting renderer versions are rejected.
+Projects saved with renderer 1.0.0 or 1.1.0 reopen with their original flow. Choose **Reset style** to adopt the current geometry and default composition settings, then save a new project. Unsupported or conflicting renderer versions are rejected.

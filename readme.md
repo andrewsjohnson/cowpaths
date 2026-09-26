@@ -62,7 +62,7 @@ Keep raw exports outside this public repository. `private-data/` and `*.local.js
 | More activity | More overlapping actual trajectories and light |
 | Public milestone | Numbered leader anchored to that month |
 
-This is an artistic encoding, not a quantitative dashboard. Path length, depth, free curls, light particles and palette variation are composed rather than measured. Recipient counts describe fulfillment recipients, **not distinct patients across the company**. Grain and point lights are decorative, not additional submissions. See [rendering notes](docs/rendering.md) for the explicit limits.
+This is an artistic encoding, not a quantitative dashboard. Path length, depth, three flow groups, free curls, light particles and palette variation are composed rather than measured. Recipient counts describe fulfillment recipients, **not distinct patients across the company**. Grain and point lights are decorative, not additional submissions. See [rendering notes](docs/rendering.md) for the explicit limits.
 
 ## Original particle experiment
 
@@ -79,7 +79,7 @@ The historical dependency set is preserved. The new studio does not import it. O
 
 ## Verification
 
-`npm test` runs twelve contracts covering hierarchy counts, branch attachment and departure angles, expanding clinic lanes, determinism, timeline cutoffs, sampling, medication-count changes, input rejection, current and legacy project round trips, CSV conversion and PNG density metadata.
+`npm test` runs thirteen contracts covering hierarchy counts, branch attachment and departure angles, expanding clinic lanes, determinism, timeline cutoffs, sampling, medication-count changes, input rejection, current and legacy project round trips, CSV conversion and PNG density metadata.
 
 An optional browser integration check requires a separately supplied Playwright installation and Chromium binary:
 

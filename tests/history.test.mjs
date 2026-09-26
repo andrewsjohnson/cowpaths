@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { validateHistory, serializableHistory, demoHistory } from '../src/journey/data.mjs';
@@ -75,10 +76,16 @@ test('old projects retain original geometry and new projects use the revised ren
   assert.equal(loaded.settings.rendererVersion, '1.0.0');
   assert.deepEqual(buildScene(loaded.history, loaded.settings).trajectories, buildLegacyScene(history, oldSettings).trajectories);
   assert.equal(project(loaded.history, loaded.settings).rendererVersion, '1.0.0');
-  assert.equal(project(history, DEFAULTS).rendererVersion, '1.1.0');
-  assert.equal(readProject(serializableHistory(history)).settings.rendererVersion, '1.1.0');
+  assert.equal(project(history, DEFAULTS).rendererVersion, '1.2.0');
+  assert.equal(readProject(serializableHistory(history)).settings.rendererVersion, '1.2.0');
   assert.throws(() => readProject({ ...saved, rendererVersion: '9.0.0' }), /Unsupported/);
   assert.throws(() => readProject({ ...saved, settings: DEFAULTS }), /disagree/);
+});
+test('renderer 1.1 projects preserve the previously published geometry', () => {
+  const saved = project(tiny(), { ...DEFAULTS, rendererVersion: '1.1.0' });
+  const loaded = readProject(saved), scene = buildScene(loaded.history, loaded.settings);
+  assert.equal(createHash('sha256').update(JSON.stringify(scene.trajectories)).digest('hex'), 'a84b1a7d9624bd4a6d304adfd58219d07a632d85bd5e02081c7237e22be39ca0');
+  assert.notDeepEqual(scene.trajectories, buildScene(tiny()).trajectories);
 });
 test('CSV adapter preserves hierarchy, discards source keys and handles quoted fields', async () => {
   const csv = await readFile(new URL('../examples/history-rows.csv', import.meta.url), 'utf8'), result = convertCSV(csv, 'Test'), encoded = JSON.stringify(result);
