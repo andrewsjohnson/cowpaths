@@ -1,5 +1,6 @@
-import { DEFAULTS, PALETTES } from './scene.mjs';
+import { DEFAULTS, PALETTES, RENDERER_VERSION } from './scene.mjs';
 import { serializableHistory, validateHistory } from './data.mjs';
+const rendererVersions = new Set(['1.0.0', RENDERER_VERSION]);
 export function validateSettings(value = {}) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Project settings must be an object.');
   const settings = { ...DEFAULTS }, bounds = { glow: [0, 1.5], exposure: [.3, 1.8], focus: [-.2, .2], aperture: [0, 1.5], turbulence: [0, 1.5], spread: [.5, 1.5], maxSubmissions: [1, 20000], through: [0, 1] };
@@ -10,18 +11,25 @@ export function validateSettings(value = {}) {
       if (key === 'maxSubmissions' && !Number.isInteger(val)) throw new Error('Submission budget must be an integer.');
     } else if (key === 'seed') {
       if (typeof val !== 'string' || !val.trim() || val.length > 64) throw new Error('Composition seed must contain 1–64 characters.');
-    } else if (key === 'palette') { if (!Object.hasOwn(PALETTES, val)) throw new Error('Unknown color story.'); }
+    } else if (key === 'rendererVersion') { if (!rendererVersions.has(val)) throw new Error('Unsupported renderer version.'); }
+    else if (key === 'palette') { if (!Object.hasOwn(PALETTES, val)) throw new Error('Unknown color story.'); }
     else if (typeof val !== 'boolean') throw new Error(`Project setting ${key} must be a boolean.`);
     settings[key] = val;
   }
   return settings;
 }
-export function project(history, settings) { return { format: 'cowpaths-project', version: 1, rendererVersion: '1.0.0', history: serializableHistory(history), settings: validateSettings(settings) }; }
+export function project(history, requested) {
+  const settings = validateSettings(requested);
+  return { format: 'cowpaths-project', version: 1, rendererVersion: settings.rendererVersion, history: serializableHistory(history), settings };
+}
 export function readProject(value) {
   if (value?.format !== 'cowpaths-project') return { history: validateHistory(value), settings: { ...DEFAULTS } };
-  if (value.version !== 1 || value.rendererVersion !== '1.0.0') throw new Error('Unsupported project or renderer version.');
+  if (value.version !== 1 || !rendererVersions.has(value.rendererVersion)) throw new Error('Unsupported project or renderer version.');
   if (Object.keys(value).some(k => !['format', 'version', 'rendererVersion', 'history', 'settings'].includes(k))) throw new Error('Project contains unsupported fields.');
-  return { history: validateHistory(value.history), settings: validateSettings(value.settings) };
+  const settings = validateSettings(value.settings);
+  if (value.settings?.rendererVersion && value.settings.rendererVersion !== value.rendererVersion) throw new Error('Project renderer versions disagree.');
+  settings.rendererVersion = value.rendererVersion;
+  return { history: validateHistory(value.history), settings };
 }
 // Replace the browser's density metadata with a valid PNG pHYs chunk.
 export async function withPrintDensity(blob, dpi = 300) {

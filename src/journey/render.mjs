@@ -58,7 +58,7 @@ export function renderScene(canvas, scene, options = {}) {
     }
   }
   if (scene.events.length) {
-    const origin = toPoint([.408, .565]);
+    const origin = toPoint(settings.rendererVersion === '1.0.0' ? [.408, .565] : scene.events[0].origin);
     if (settings.glow > 0) sprite(ctx, ...origin, S * .022 * settings.glow, '#dfffd7', .62, true);
     sprite(ctx, ...origin, S * .0015, '#f1ffe5', .95);
   }

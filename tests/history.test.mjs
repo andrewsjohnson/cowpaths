@@ -2,8 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { validateHistory, serializableHistory, demoHistory } from '../src/journey/data.mjs';
-import { buildScene, DEFAULTS } from '../src/journey/scene.mjs';
+import { buildScene, DEFAULTS, spine } from '../src/journey/scene.mjs';
 import { project, readProject, validateSettings, withPrintDensity } from '../src/journey/project.mjs';
+import { frameAt, pointAt } from '../src/journey/math.mjs';
+import { buildScene as buildLegacyScene } from '../src/journey/scene-v1.mjs';
 import { convertCSV, parseCSV } from '../scripts/import-csv.mjs';
 const fixture = JSON.parse(await readFile(new URL('../examples/history-small.json', import.meta.url)));
 const clone = value => structuredClone(value), tiny = () => validateHistory(clone(fixture));
@@ -12,18 +14,27 @@ test('hierarchy counts match submissions, pharmacies, recipients and medication 
   assert.equal(count('clinic'), 2); assert.equal(count('submission'), 3); assert.equal(count('pharmacy'), 4); assert.equal(count('recipient'), 4); assert.equal(count('stock'), 1); assert.equal(count('medication'), 12);
   assert.equal(scene.trajectories.length, 26); assert.equal(history.stats.medications, 12);
 });
-test('each branch starts on its parent and positions remain finite', () => {
-  const scene = buildScene(tiny()), parents = new Map(scene.trajectories.map(t => [t.id, t]));
-  for (const track of scene.trajectories) {
-    for (const p of track.points) assert.ok(p.every(Number.isFinite));
-    if (track.kind === 'clinic' || track.kind === 'submission') continue;
-    const parent = parents.get(track.parentId); assert.ok(parent); const p = track.points[0];
-    const distances = parent.points.slice(1).map((b, i) => {
-      const a = parent.points[i], d = b.map((v, k) => v - a[k]), norm = d.reduce((s, v) => s + v*v, 0);
-      const u = Math.max(0, Math.min(1, d.reduce((s, v, k) => s + v * (p[k] - a[k]), 0) / norm));
-      return Math.hypot(...p.map((v, k) => v - a[k] - d[k] * u));
-    });
-    assert.ok(Math.min(...distances) < 1e-10, `${track.id} detached from parent`);
+test('all branch levels start on their parent and leave in its forward direction', () => {
+  for (const history of [tiny(), demoHistory()]) {
+    const scene = buildScene(history), parents = new Map(scene.trajectories.map(t => [t.id, t]));
+    for (const track of scene.trajectories) {
+      for (const p of track.points) assert.ok(p.every(Number.isFinite));
+      if (track.kind === 'clinic') continue;
+      const parent = parents.get(track.parentId); assert.ok(parent);
+      const frame = frameAt(parent.points, track.parentFraction), [a, b] = track.points;
+      assert.deepEqual(a, pointAt(parent.points, track.parentFraction), `${track.id} detached from parent`);
+      const angle = Math.atan2(b[1] - a[1], b[0] - a[0]) - frame.heading;
+      assert.ok(Math.abs(Math.atan2(Math.sin(angle), Math.cos(angle))) < 1e-9, `${track.id} has an angular fork`);
+    }
+  }
+});
+test('inner and outer clinic lanes expand without folding across the origin', () => {
+  for (const lane of [-.019, 0, .019]) {
+    let previous = 0;
+    for (let i = 0; i <= 1000; i++) {
+      const p = spine(i / 1000, lane), radius = Math.hypot(p[0] - .408, (p[1] - .59) / 1.2);
+      assert.ok(radius > 0 && radius >= previous - 1e-12); previous = radius;
+    }
   }
 });
 test('input reordering preserves geometry; seeds change geometry without changing topology', () => {
@@ -56,6 +67,18 @@ test('project round trip retains history, settings and synthetic provenance', ()
   const history = tiny(), settings = { ...DEFAULTS, seed: 'test', palette: 'ember', glow: 0 }, loaded = readProject(JSON.parse(JSON.stringify(project(history, settings))));
   assert.deepEqual(loaded.history, history); assert.deepEqual(loaded.settings, settings); assert.equal(loaded.history.synthetic, true); assert.equal(serializableHistory(history).stats, undefined);
   assert.throws(() => validateSettings({ exposure: NaN })); assert.throws(() => validateSettings({ maxSubmissions: 1.2 })); assert.throws(() => validateSettings(JSON.parse('{"__proto__":true}')));
+});
+test('old projects retain original geometry and new projects use the revised renderer', () => {
+  const history = tiny(), oldSettings = { ...DEFAULTS }; delete oldSettings.rendererVersion;
+  const saved = { format: 'cowpaths-project', version: 1, rendererVersion: '1.0.0', history: serializableHistory(history), settings: oldSettings };
+  const loaded = readProject(saved);
+  assert.equal(loaded.settings.rendererVersion, '1.0.0');
+  assert.deepEqual(buildScene(loaded.history, loaded.settings).trajectories, buildLegacyScene(history, oldSettings).trajectories);
+  assert.equal(project(loaded.history, loaded.settings).rendererVersion, '1.0.0');
+  assert.equal(project(history, DEFAULTS).rendererVersion, '1.1.0');
+  assert.equal(readProject(serializableHistory(history)).settings.rendererVersion, '1.1.0');
+  assert.throws(() => readProject({ ...saved, rendererVersion: '9.0.0' }), /Unsupported/);
+  assert.throws(() => readProject({ ...saved, settings: DEFAULTS }), /disagree/);
 });
 test('CSV adapter preserves hierarchy, discards source keys and handles quoted fields', async () => {
   const csv = await readFile(new URL('../examples/history-rows.csv', import.meta.url), 'utf8'), result = convertCSV(csv, 'Test'), encoded = JSON.stringify(result);

@@ -27,6 +27,21 @@ try {
   const projectEvent = page.waitForEvent('download'); await page.locator('#save-project').click(); const projectDownload = await projectEvent; await projectDownload.saveAs(`${out}/project.json`);
   await page.locator('#reseed').click(); await page.waitForFunction(() => document.querySelector('#art').dataset.ready === 'false'); await ready(); assert.notEqual(await page.locator('#art').evaluate(c => c.toDataURL()), before);
   await page.locator('#history-file').setInputFiles(`${out}/project.json`); await page.waitForFunction(() => document.querySelector('#seed').value === 'VITL-2026'); await page.waitForFunction(() => document.querySelector('#art').dataset.ready === 'false'); await ready(); assert.equal(await page.locator('#art').evaluate(c => c.toDataURL()), before);
+  const legacyProject = JSON.parse(await readFile(`${out}/project.json`, 'utf8')); legacyProject.rendererVersion = '1.0.0'; delete legacyProject.settings.rendererVersion; legacyProject.settings.seed = 'legacy-study';
+  await page.locator('#history-file').setInputFiles({ name: 'legacy.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(legacyProject)) });
+  await page.waitForFunction(() => document.querySelector('#seed').value === 'legacy-study'); await ready();
+  assert.ok((await page.locator('#status').textContent()).includes('Original flow retained'));
+  assert.equal(await page.evaluate(async saved => {
+    const { validateHistory } = await import('/src/journey/data.mjs'), { buildScene } = await import('/src/journey/scene-v1.mjs'), { renderScene } = await import('/src/journey/render.mjs');
+    // Match the worker's OffscreenCanvas -> ImageBitmap compositing path.
+    const actual = document.querySelector('#art'), output = new OffscreenCanvas(actual.width, actual.height);
+    renderScene(output, buildScene(validateHistory(saved.history), { ...saved.settings, rendererVersion: '1.0.0' }));
+    const expected = document.createElement('canvas'); expected.width = actual.width; expected.height = actual.height;
+    const bitmap = output.transferToImageBitmap(); expected.getContext('2d').drawImage(bitmap, 0, 0); bitmap.close();
+    return actual.toDataURL() === expected.toDataURL();
+  }, legacyProject), true);
+  await page.locator('#reset-style').click(); await page.waitForFunction(() => document.querySelector('#art').dataset.ready === 'false'); await ready();
+  assert.ok(!(await page.locator('#status').textContent()).includes('Original flow retained'));
   await page.locator('#export-size').selectOption('2048'); const pngEvent = page.waitForEvent('download', { timeout: 120000 }); await page.locator('#export').click(); const pngDownload = await pngEvent; await pngDownload.saveAs(`${out}/export-2048.png`);
   const png = await readFile(`${out}/export-2048.png`); assert.equal(png.readUInt32BE(16), 2048); assert.equal(png.readUInt32BE(20), 2048); assert.equal(png.readUInt32BE(png.indexOf('pHYs') + 4), 11811);
   await page.locator('#reset-data').click(); await page.waitForFunction(() => document.querySelector('#count-submissions').textContent === '947'); await ready();
@@ -39,6 +54,6 @@ try {
   }
   const fallback = await browser.newPage({ viewport: { width: 1000, height: 900 } }); await fallback.addInitScript(() => { window.Worker = undefined; }); fallback.on('pageerror', error => pageErrors.push(error.message)); await fallback.goto('http://127.0.0.1:8093/'); await fallback.waitForFunction(() => document.querySelector('#art').dataset.ready === 'true', null, { timeout: 120000 }); assert.equal(await fallback.locator('#count-submissions').textContent(), '947'); await fallback.close();
   assert.deepEqual(pageErrors, []); assert.deepEqual(external, []);
-  const report = { browser: browser.version(), readyMs, submissions: 947, cases: ['worker render', 'import', 'invalid import preserves study', 'timeline cutoff', 'seed changes canvas', 'project reproduces canvas', '2048px export and 300dpi metadata', 'mobile no overflow', 'focus view', 'main-thread fallback', ...(process.env.TEST_PRINT === '1' ? ['7200px print export'] : [])], errors: pageErrors, externalRequests: external };
+  const report = { browser: browser.version(), readyMs, submissions: 947, cases: ['worker render', 'import', 'invalid import preserves study', 'timeline cutoff', 'seed changes canvas', 'project reproduces canvas', 'legacy project reproduces original renderer', 'reset style upgrades legacy flow', '2048px export and 300dpi metadata', 'mobile no overflow', 'focus view', 'main-thread fallback', ...(process.env.TEST_PRINT === '1' ? ['7200px print export'] : [])], errors: pageErrors, externalRequests: external };
   await writeFile(`${out}/browser-report.json`, JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report, null, 2));
 } finally { await browser?.close(); server.kill(); }

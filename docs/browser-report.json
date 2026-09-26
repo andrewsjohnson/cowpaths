@@ -1,6 +1,6 @@
 {
-  "browser": "138.0.7204.0",
-  "readyMs": 1228,
+  "browser": "153.0.8010.0",
+  "readyMs": 1341,
   "submissions": 947,
   "cases": [
     "worker render",
@@ -9,6 +9,8 @@
     "timeline cutoff",
     "seed changes canvas",
     "project reproduces canvas",
+    "legacy project reproduces original renderer",
+    "reset style upgrades legacy flow",
     "2048px export and 300dpi metadata",
     "mobile no overflow",
     "focus view",

@@ -35,7 +35,7 @@ function updateStats(data) {
   const s = data.stats;
   $('count-submissions').textContent = formatter.format(s.rendered); $('count-clinics').textContent = formatter.format(s.visibleClinics); $('count-pharmacies').textContent = formatter.format(s.pharmacies); $('count-tracks').textContent = formatter.format(s.trajectories);
   $('through-label').textContent = `${data.cutoffMonth}${settings.through === 1 ? ' · present' : ''}`;
-  $('status').textContent = `${history.synthetic ? 'Synthetic demo. ' : ''}${s.sampled ? `${formatter.format(s.rendered)} of ${formatter.format(s.eligible)} submissions shown in a deterministic sample.` : `Every submission through ${data.cutoffMonth} is drawn.`} ${formatter.format(s.submissions)} submissions in the complete history. Reproducible seed: ${settings.seed}.`;
+  $('status').textContent = `${history.synthetic ? 'Synthetic demo. ' : ''}${s.sampled ? `${formatter.format(s.rendered)} of ${formatter.format(s.eligible)} submissions shown in a deterministic sample.` : `Every submission through ${data.cutoffMonth} is drawn.`} ${formatter.format(s.submissions)} submissions in the complete history. Reproducible seed: ${settings.seed}.${settings.rendererVersion === '1.0.0' ? ' Original flow retained. Reset style to try the updated flow.' : ''}`;
   canvas.setAttribute('aria-label', `${history.title} history through ${data.cutoffMonth}: ${s.rendered} of ${s.eligible} submissions, ${s.visibleClinics} clinic strands. ${history.synthetic ? 'Synthetic concept study.' : ''}`); canvas.dataset.ready = 'true';
 }
 try {

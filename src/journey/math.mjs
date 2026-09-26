@@ -24,3 +24,17 @@ export function tangentAt(points, fraction) {
   const i = Math.min(points.length - 2, Math.floor(clamp(fraction) * (points.length - 1)));
   return Math.atan2(points[i + 1][1] - points[i][1], points[i + 1][0] - points[i][0]);
 }
+
+/** Local differential frame on the actual parent polyline, including depth. */
+export function frameAt(points, fraction) {
+  const index = Math.min(points.length - 2, Math.floor(clamp(fraction) * (points.length - 1)));
+  const a = points[index], b = points[index + 1];
+  const dx = b[0] - a[0], dy = b[1] - a[1], distance = Math.hypot(dx, dy);
+  const heading = Math.atan2(dy, dx);
+  const before = points[Math.max(0, index - 1)], after = points[Math.min(points.length - 1, index + 2)];
+  const previous = index > 0 ? Math.atan2(a[1] - before[1], a[0] - before[0]) : heading;
+  const next = index + 2 < points.length ? Math.atan2(after[1] - b[1], after[0] - b[0]) : heading;
+  const angle = Math.atan2(Math.sin(next - previous), Math.cos(next - previous));
+  const span = .5 * Math.hypot(a[0] - before[0], a[1] - before[1]) + distance + .5 * Math.hypot(after[0] - b[0], after[1] - b[1]);
+  return { position: pointAt(points, fraction), heading, curvature: angle / Math.max(span, 1e-8), slope: (b[2] - a[2]) / Math.max(distance, 1e-8) };
+}
