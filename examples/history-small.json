@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "title": "VITL",
+  "subtitle": "A more accessible tomorrow",
+  "synthetic": true,
+  "clinics": [{ "id": "clinic-001", "joined": "2022-01" }, { "id": "clinic-002", "joined": "2022-06" }],
+  "pharmacies": [{ "id": "pharmacy-001" }, { "id": "pharmacy-002" }],
+  "submissions": [
+    { "id": "submission-001", "month": "2022-01", "clinicId": "clinic-001", "type": "patient", "fulfillments": [{ "pharmacyId": "pharmacy-001", "recipients": [{ "medicationCount": 2 }] }] },
+    { "id": "submission-002", "month": "2022-06", "clinicId": "clinic-002", "type": "patient", "fulfillments": [{ "pharmacyId": "pharmacy-001", "recipients": [{ "medicationCount": 2 }, { "medicationCount": 1 }] }, { "pharmacyId": "pharmacy-002", "recipients": [{ "medicationCount": 3 }] }] },
+    { "id": "submission-003", "month": "2023-03", "clinicId": "clinic-001", "type": "stock", "fulfillments": [{ "pharmacyId": "pharmacy-002", "recipients": [{ "medicationCount": 4 }] }] }
+  ],
+  "milestones": [{ "month": "2022-01", "label": "First order" }, { "month": "2022-06", "label": "A new clinic" }]
+}

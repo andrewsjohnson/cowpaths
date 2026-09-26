@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0c1713">
+  <meta name="description" content="Cowpaths — turn the history of a company into luminous, branching art.">
+  <title>Cowpaths · A journey in glowing strands</title>
+  <link rel="stylesheet" href="./src/journey/studio.css"><script type="module" src="./src/journey/studio.mjs"></script>
+</head>
+<body>
+  <header class="topbar"><a class="wordmark" href="./" aria-label="Cowpaths home"><span class="mark" aria-hidden="true">◎</span> cowpaths <span class="studio-tag">HISTORY STUDIO</span></a><div class="top-actions"><span class="local-badge"><i></i> Local canvas</span><button id="save-project" class="quiet">Save project <span aria-hidden="true">↗</span></button></div></header>
+  <main>
+    <aside class="controls" aria-label="Artwork controls">
+      <div class="intro"><p class="eyebrow">01 / A LIVING ARCHIVE</p><h1>A journey in<br><em>glowing strands.</em></h1><p>Every connection leaves a trace.<br>Turn your history into something you can hold.</p></div>
+      <section class="source-section">
+        <div class="section-heading"><h2>Your history</h2><span id="source-badge" class="badge">SAMPLE</span></div><p id="source-description">An imagined VITL journey, 2022–2026.</p>
+        <label class="upload-button" for="history-file"><span aria-hidden="true">↑</span> Import history or project <input id="history-file" type="file" accept=".json,application/json"></label>
+        <div class="small-actions"><button id="sample-json">Download sample</button><button id="reset-data">Use demo</button><a href="./docs/data-format.md" target="_blank" rel="noopener">Data guide ↗</a></div><p class="privacy-note">Files stay in this browser. Use art-only keys and approved public labels.</p>
+      </section>
+      <section>
+        <div class="section-heading"><h2>The composition</h2><button id="reset-style" class="text-button">Reset</button></div>
+        <label class="field-label" for="seed">Composition seed</label><div class="seed-row"><input id="seed" type="text" maxlength="64" value="VITL-2026" spellcheck="false"><button id="reseed" aria-label="Try another composition seed" title="Try another seed">↻</button></div>
+        <label class="range-label" for="spread">Branch reach <output id="spread-value">1.00</output></label><input id="spread" type="range" min="0.5" max="1.5" step="0.05" value="1">
+        <label class="range-label" for="turbulence">Flow variation <output id="turbulence-value">0.55</output></label><input id="turbulence" type="range" min="0" max="1.5" step="0.05" value="0.55">
+        <label class="field-label" for="palette">Color story</label><select id="palette"><option value="vitl">VITL · mint, citron & ivory</option><option value="glacial">Glacial · ice & periwinkle</option><option value="ember">Ember · apricot & rose</option></select>
+      </section>
+      <section>
+        <div class="section-heading"><h2>Light & depth</h2><span class="section-number">02</span></div>
+        <label class="range-label" for="glow">Bloom <output id="glow-value">0.65</output></label><input id="glow" type="range" min="0" max="1.5" step="0.05" value="0.65">
+        <label class="range-label" for="exposure">Exposure <output id="exposure-value">1.00</output></label><input id="exposure" type="range" min="0.3" max="1.8" step="0.05" value="1">
+        <label class="range-label" for="aperture">Depth softness <output id="aperture-value">0.55</output></label><input id="aperture" type="range" min="0" max="1.5" step="0.05" value="0.55">
+        <label class="range-label" for="focus">Focus plane <output id="focus-value">0.06</output></label><input id="focus" type="range" min="-0.2" max="0.2" step="0.01" value="0.06">
+        <label class="switch-row" for="labels">Milestone annotations <input id="labels" type="checkbox" checked></label><label class="switch-row" for="poster">Poster typography & legend <input id="poster" type="checkbox" checked></label>
+      </section>
+      <section class="export-section">
+        <div class="section-heading"><h2>Make it tangible</h2><span class="section-number">03</span></div><label class="field-label" for="export-size">PNG · square · 300 dpi metadata</label>
+        <select id="export-size"><option value="2048">2,048 px · study</option><option value="4096" selected>4,096 px · detailed proof</option><option value="7200">7,200 px · 24 × 24 in at 300 dpi</option></select>
+        <button id="export" class="primary">Export artwork <span aria-hidden="true">↓</span></button><p class="privacy-note">Print export redraws every strand at the selected resolution. Use a desktop for the largest size.</p>
+      </section>
+      <details><summary>How the history becomes art</summary><p>Each clinic keeps a separate timeline strand. A submission leaves its clinic at its month, then branches into pharmacy fulfillments, recipients, and medication counts. Stock deliveries use dashed paths.</p><p>Curvature, sparkle and depth are artistic choices. Point lights are texture, not extra orders. Months preserve chronology; exact dates and patient identities are not needed.</p><label class="field-label" for="maxSubmissions">Submission drawing budget</label><select id="maxSubmissions"><option value="1800">1,800 · balanced</option><option value="4000">4,000 · dense</option><option value="20000">20,000 · full history, slower</option></select><p>If the history exceeds this budget, a repeatable sample is shown and labeled. Counts below always distinguish drawn and available submissions.</p></details>
+      <p class="legacy-note">The original particle experiment is preserved.<br><code>npm run dev:legacy</code></p>
+    </aside>
+    <section class="workspace" aria-label="Artwork preview">
+      <div class="canvas-heading"><span><i class="live-dot"></i> <span id="preview-title">VITL / STUDY 001</span></span><button id="view-art" class="text-button">Focus view <span aria-hidden="true">↗</span></button></div>
+      <div class="art-mount" id="art-mount"><canvas id="art" width="1400" height="1400" role="img" aria-label="A branching portrait of company history, with mint and citron strands tracing an outward spiral."></canvas><div id="render-indicator" class="render-indicator" hidden>Tracing the journey…</div></div>
+      <div class="timeline"><button id="play" aria-label="Play company history" title="Play company history">▶</button><div class="timeline-control"><div class="timeline-label"><span id="start-date">2022-01</span><strong id="through-label">2026-09 · present</strong></div><input id="through" type="range" min="0" max="1" step="0.01" value="1" aria-label="History through month"></div></div>
+      <div class="stats" aria-label="History statistics"><div><strong id="count-submissions">—</strong><span>submissions drawn</span></div><div><strong id="count-clinics">—</strong><span>active clinic strands</span></div><div><strong id="count-pharmacies">—</strong><span>pharmacies in history</span></div><div><strong id="count-tracks">—</strong><span>connected trajectories</span></div></div>
+      <p id="status" role="status" aria-live="polite">Preparing your first study…</p><p id="error" role="alert" hidden></p>
+    </section>
+  </main><noscript>This studio needs JavaScript to trace and render its artwork.</noscript>
+</body>
+</html>

@@ -1,0 +1,6 @@
+submission_key,month,clinic_key,order_type,pharmacy_key,recipient_key,medication_count
+example-submission-a,2022-01,example-clinic-a,patient,example-pharmacy-a,example-recipient-a,2
+example-submission-b,2022-06,example-clinic-b,patient,example-pharmacy-a,example-recipient-a,2
+example-submission-b,2022-06,example-clinic-b,patient,example-pharmacy-a,example-recipient-b,1
+example-submission-b,2022-06,example-clinic-b,patient,example-pharmacy-b,example-recipient-a,3
+example-submission-c,2023-03,example-clinic-a,stock,example-pharmacy-b,clinic-stock,4

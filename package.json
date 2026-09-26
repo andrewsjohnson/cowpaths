@@ -2,8 +2,11 @@
   "repository": "#",
   "license": "UNLICENSED",
   "scripts": {
-    "build": "webpack --config ./bundler/webpack.prod.js",
-    "dev": "webpack serve --config ./bundler/webpack.dev.js"
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build:legacy": "webpack --config ./bundler/webpack.prod.js",
+    "dev:legacy": "webpack serve --config ./bundler/webpack.dev.js"
   },
   "dependencies": {
     "@babel/core": "^7.13.1",
