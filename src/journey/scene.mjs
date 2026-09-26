@@ -2,11 +2,12 @@ import { clamp, hash, pointAt, random } from './math.mjs';
 import { monthIndex, monthString } from './data.mjs';
 import { buildScene as buildPreviousScene, DEFAULTS as PREVIOUS_DEFAULTS, PALETTES } from './scene-v2.mjs';
 import { ribbonPoint, clinicRibbon, branchRibbon } from './ribbon.mjs';
+import { applyTrailDetails } from './attractors.mjs';
 export { PALETTES };
-export const RENDERER_VERSION = '1.3.0';
-export const DEFAULTS = Object.freeze({ ...PREVIOUS_DEFAULTS, rendererVersion: RENDERER_VERSION });
+export const RENDERER_VERSION = '1.4.0';
+export const DEFAULTS = Object.freeze({ ...PREVIOUS_DEFAULTS, detail: .65, attraction: .65, attractorRadius: .055, rendererVersion: RENDERER_VERSION });
 export function buildScene(history, requested = {}) {
-  if (requested.rendererVersion && requested.rendererVersion !== RENDERER_VERSION) return buildPreviousScene(history, requested);
+  if (requested.rendererVersion && !['1.3.0', RENDERER_VERSION].includes(requested.rendererVersion)) return buildPreviousScene(history, requested);
   const settings = { ...DEFAULTS, ...requested }, trajectories = [], events = [], clinics = new Map();
   const span = Math.max(1, history.stats.end - history.stats.start + 1), time = month => (monthIndex(month) - history.stats.start) / span;
   const cutoffMonth = Math.min(history.stats.end, history.stats.start + Math.floor(clamp(settings.through) * span));
@@ -53,6 +54,11 @@ export function buildScene(history, requested = {}) {
       });
     });
   }
+  const attractors = settings.rendererVersion === RENDERER_VERSION ? applyTrailDetails(trajectories,settings) : [];
+  if(settings.rendererVersion === RENDERER_VERSION){
+    const lookup=new Map(trajectories.map(path=>[path.id,path]));
+    for(const event of events){const path=lookup.get(event.id);event.origin=path.points[0];event.anchor=pointAt(path.points,.68);}
+  }
   const milestones = history.milestones.filter(m => monthIndex(m.month) <= cutoffMonth).map((m, i) => ({ ...m, number: i + 1, t: time(m.month), anchor: i === 0 ? events.find(e => e.month === m.month)?.origin ?? ribbonPoint((time(m.month) + .3 / span)*.70,0) : events.find(e => e.month === m.month)?.anchor ?? ribbonPoint((time(m.month) + .3 / span)*.70,0) }));
-  return { settings, history, trajectories, milestones, events, totalPoints, cutoff, cutoffMonth: monthString(cutoffMonth), stats: { ...history.stats, visibleClinics: trajectories.filter(t => t.kind === 'clinic').length, eligible: eligible.length, rendered: selected.length, sampled: selected.length < eligible.length, trajectories: trajectories.length } };
+  return { settings, history, trajectories, attractors, milestones, events, totalPoints, cutoff, cutoffMonth: monthString(cutoffMonth), stats: { ...history.stats, visibleClinics: trajectories.filter(t => t.kind === 'clinic').length, eligible: eligible.length, rendered: selected.length, sampled: selected.length < eligible.length, trajectories: trajectories.length } };
 }

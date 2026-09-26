@@ -1,6 +1,6 @@
 {
   "browser": "153.0.8010.0",
-  "readyMs": 2519,
+  "readyMs": 3780,
   "submissions": 947,
   "cases": [
     "worker render",
@@ -8,6 +8,7 @@
     "invalid import preserves study",
     "timeline cutoff",
     "seed changes canvas",
+    "detail and attractor controls change canvas",
     "project reproduces canvas",
     "legacy project reproduces original renderer",
     "reset style upgrades legacy flow",

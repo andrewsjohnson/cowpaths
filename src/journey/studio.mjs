@@ -18,8 +18,11 @@ function syncControls() {
     const input = $(key); if (!input) continue;
     if (input.type === 'checkbox') input.checked = settings[key];
     else { if (input.tagName === 'SELECT' && ![...input.options].some(o => o.value === String(settings[key]))) input.add(new Option(String(settings[key]), String(settings[key]))); input.value = settings[key]; }
-    if ($(`${key}-value`)) $(`${key}-value`).textContent = Number(settings[key]).toFixed(2);
+    if ($(`${key}-value`)) $(`${key}-value`).textContent = Number(settings[key]).toFixed(key === 'attractorRadius' ? 3 : 2);
   }
+  const legacyDetail = settings.rendererVersion !== DEFAULTS.rendererVersion;
+  for (const key of ['detail','attraction','attractorRadius']) $(key).disabled = legacyDetail;
+  $('detail-legacy-note').hidden = !legacyDetail;
   $('source-badge').textContent = history.synthetic ? 'SAMPLE' : 'IMPORTED';
   $('source-description').textContent = `${history.synthetic ? 'Imagined' : 'Imported'} ${history.title} history · ${monthString(history.stats.start)} to ${monthString(history.stats.end)}.`;
   $('preview-title').textContent = `${history.title.toUpperCase()} / ${history.synthetic ? 'CONCEPT STUDY' : 'HISTORY STUDY'}`; $('start-date').textContent = monthString(history.stats.start);
@@ -63,7 +66,7 @@ for (const key of controls) {
   input.addEventListener(input.type === 'text' ? 'change' : 'input', () => {
     if (input.type === 'text' && !input.value.trim()) input.value = DEFAULTS.seed;
     settings[key] = input.type === 'checkbox' ? input.checked : ['seed', 'palette'].includes(key) ? input.value : Number(input.value);
-    if ($(`${key}-value`)) $(`${key}-value`).textContent = Number(settings[key]).toFixed(2);
+    if ($(`${key}-value`)) $(`${key}-value`).textContent = Number(settings[key]).toFixed(key === 'attractorRadius' ? 3 : 2);
     if (key === 'through') stopPlayback(); schedule();
   });
 }

@@ -16,6 +16,16 @@ Submission months determine where branches begin along the clinic path. Child le
 
 Every entity uses its own seeded random generator. Reordering clinics, pharmacies or submissions does not change the geometry. Direct-JSON fulfillment and recipient array order is part of the input; preserve it to reproduce a study. The renderer does not accumulate frames, so export output is independent of how long the app has been open.
 
+## Local detail and trail attractors (1.4)
+
+The **Branch detail** control adds seeded wave packets at several scales: submissions have the broadest departures, pharmacy branches have smaller ones, and recipient and medication branches add finer detail. Descendants inherit their ancestors' packets. All perturbations use the ribbon's local 3D orientation and preserve exact parent attachment and forward departure.
+
+Up to 32 existing submission trails become weak attractor guides, chosen deterministically by seed and key. These source trails retain their diverged geometry while their neighbors respond. Sources span three reach scales (0.4, 0.8 and 1.4 times **Attractor reach**). Each starts with exactly zero strength, eases up over its first 22%, and eases back to zero over its final 32%, using a quintic envelope with smooth first and second derivatives. **Attractor strength** controls their influence.
+
+The field combines a radial pull and a small tangential component. Its compact 3D support fades to zero at the reach boundary; strands that cross only in projection do not necessarily interact. Damped displacement, normalized overlapping influences and a displacement cap keep the larger ribbon form coherent. Child paths inherit their parent's displacement at their junction.
+
+Lifetime here means progress along the source trail, not wall-clock simulation. The result remains reproducible as a still image. These effects are artistic structure and introduce no extra submissions or business measurements. Setting both Branch detail and Attractor strength to zero exactly restores renderer 1.3 geometry. Compare [the same seed with and without local detail](detail-comparison.jpg).
+
 ## Light and depth
 
 The compositor combines constant-width cores, low-opacity halo passes, seeded point lights along those curves, decorative grain and a vignette. Solid/dashed core texture distinguishes patient and stock submissions. Paths have butt ends rather than opacity tapers. Geometry remains visible with bloom off.
@@ -28,10 +38,12 @@ The master is square. The poster reserves its bottom 16% for reading instruction
 
 Exports redraw the same paths and lights at the selected resolution, not an enlarged screenshot. PNG `pHYs` metadata specifies 300 dpi. A 7,200-pixel image is 24 inches at 300 dpi or 30 inches at 240 dpi. The browser produces RGB PNG, not a printer-specific color separation. Verify a proof with the intended paper and printing service. The largest export may exceed a mobile browser's memory, so smaller export options remain available.
 
-New projects use renderer 1.3.0. Saved 1.0.0, 1.1.0 and 1.2.0 projects retain their original geometry; **Reset style** adopts the current renderer. Project files reproduce geometry and settings for the indicated renderer version. Font rasterization and Canvas antialiasing can vary by browser and operating system; byte-identical PNGs across engines are not promised. System sans-serif fonts are used without network font requests.
+New projects use renderer 1.4.0. Saved 1.0.0, 1.1.0, 1.2.0 and 1.3.0 projects retain their original geometry; **Reset style** adopts the current renderer. Project files reproduce geometry and settings for the indicated renderer version. Font rasterization and Canvas antialiasing can vary by browser and operating system; byte-identical PNGs across engines are not promised. System sans-serif fonts are used without network font requests.
 
 ## Verification
 
 Node tests check exact multi-pharmacy hierarchy counts, finite positions, exact parent/child attachment and forward departure angles at every branch level, a framed ribbon silhouette and separate clinic lanes in 3D, deterministic geometry, timeline cutoff, sampling disclosure, medication-count counterfactuals, rejected input, current and legacy project round trips, CSV grouping/key removal and PNG density metadata.
+
+Additional tests cover attractor lifetimes, compact 3D locality, bounded influence, exact zero-detail compatibility and persisted controls.
 
 The optional browser script exercises real imports, seed changes, project save/reopen, PNG downloads, main-thread fallback, worker rendering, mobile layout and full-size export. The browser report records the tested environment and external network requests. Preview and test fixtures use synthetic data exclusively.

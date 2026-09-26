@@ -67,7 +67,7 @@ test('rejects invalid dates, references, ids, extra fields and stock hierarchy',
   for (const mutate of mutations) { const data = clone(fixture); mutate(data); assert.throws(() => validateHistory(data)); }
 });
 test('project round trip retains history, settings and synthetic provenance', () => {
-  const history = tiny(), settings = { ...DEFAULTS, seed: 'test', palette: 'ember', glow: 0 }, loaded = readProject(JSON.parse(JSON.stringify(project(history, settings))));
+  const history = tiny(), settings = { ...DEFAULTS, seed: 'test', palette: 'ember', glow: 0, detail: 1.1, attraction: .4, attractorRadius: .035 }, loaded = readProject(JSON.parse(JSON.stringify(project(history, settings))));
   assert.deepEqual(loaded.history, history); assert.deepEqual(loaded.settings, settings); assert.equal(loaded.history.synthetic, true); assert.equal(serializableHistory(history).stats, undefined);
   assert.throws(() => validateSettings({ exposure: NaN })); assert.throws(() => validateSettings({ maxSubmissions: 1.2 })); assert.throws(() => validateSettings(JSON.parse('{"__proto__":true}')));
 });
@@ -78,8 +78,8 @@ test('old projects retain original geometry and new projects use the revised ren
   assert.equal(loaded.settings.rendererVersion, '1.0.0');
   assert.deepEqual(buildScene(loaded.history, loaded.settings).trajectories, buildLegacyScene(history, oldSettings).trajectories);
   assert.equal(project(loaded.history, loaded.settings).rendererVersion, '1.0.0');
-  assert.equal(project(history, DEFAULTS).rendererVersion, '1.3.0');
-  assert.equal(readProject(serializableHistory(history)).settings.rendererVersion, '1.3.0');
+  assert.equal(project(history, DEFAULTS).rendererVersion, '1.4.0');
+  assert.equal(readProject(serializableHistory(history)).settings.rendererVersion, '1.4.0');
   assert.throws(() => readProject({ ...saved, rendererVersion: '9.0.0' }), /Unsupported/);
   assert.throws(() => readProject({ ...saved, settings: DEFAULTS }), /disagree/);
 });

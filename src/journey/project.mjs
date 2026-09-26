@@ -1,9 +1,9 @@
 import { DEFAULTS, PALETTES, RENDERER_VERSION } from './scene.mjs';
 import { serializableHistory, validateHistory } from './data.mjs';
-const rendererVersions = new Set(['1.0.0', '1.1.0', '1.2.0', RENDERER_VERSION]);
+const rendererVersions = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', RENDERER_VERSION]);
 export function validateSettings(value = {}) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Project settings must be an object.');
-  const settings = { ...DEFAULTS }, bounds = { glow: [0, 1.5], exposure: [.3, 1.8], focus: [-.2, .2], aperture: [0, 1.5], turbulence: [0, 1.5], spread: [.5, 1.5], maxSubmissions: [1, 20000], through: [0, 1] };
+  const settings = { ...DEFAULTS }, bounds = { detail: [0, 1.5], attraction: [0, 1.5], attractorRadius: [.015, .10], glow: [0, 1.5], exposure: [.3, 1.8], focus: [-.2, .2], aperture: [0, 1.5], turbulence: [0, 1.5], spread: [.5, 1.5], maxSubmissions: [1, 20000], through: [0, 1] };
   for (const [key, val] of Object.entries(value)) {
     if (!Object.hasOwn(DEFAULTS, key)) throw new Error('Project settings contain an unsupported field.');
     if (Object.hasOwn(bounds, key)) {

@@ -24,7 +24,15 @@
         <label class="field-label" for="palette">Color story</label><select id="palette"><option value="vitl">VITL · mint, citron & ivory</option><option value="glacial">Glacial · ice & periwinkle</option><option value="ember">Ember · apricot & rose</option></select>
       </section>
       <section>
-        <div class="section-heading"><h2>Light & depth</h2><span class="section-number">02</span></div>
+        <div class="section-heading"><h2>Local detail</h2><span class="section-number">02</span></div>
+        <label class="range-label" for="detail">Branch detail <output id="detail-value">0.65</output></label><input id="detail" type="range" min="0" max="1.5" step="0.05" value="0.65">
+        <label class="range-label" for="attraction">Attractor strength <output id="attraction-value">0.65</output></label><input id="attraction" type="range" min="0" max="1.5" step="0.05" value="0.65">
+        <label class="range-label" for="attractorRadius">Attractor reach <output id="attractorRadius-value">0.055</output></label><input id="attractorRadius" type="range" min="0.015" max="0.100" step="0.005" value="0.055">
+        <p class="privacy-note">Small departures, eddies and clustering. Set both strengths to zero for smooth ribbons. Attractors ease in and fade out along their source trails.</p>
+        <p id="detail-legacy-note" class="privacy-note" hidden>Reset the composition to enable local detail for this saved project.</p>
+      </section>
+      <section>
+        <div class="section-heading"><h2>Light & depth</h2><span class="section-number">03</span></div>
         <label class="range-label" for="glow">Bloom <output id="glow-value">0.65</output></label><input id="glow" type="range" min="0" max="1.5" step="0.05" value="0.65">
         <label class="range-label" for="exposure">Exposure <output id="exposure-value">1.00</output></label><input id="exposure" type="range" min="0.3" max="1.8" step="0.05" value="1">
         <label class="range-label" for="aperture">Depth softness <output id="aperture-value">0.55</output></label><input id="aperture" type="range" min="0" max="1.5" step="0.05" value="0.55">
@@ -32,7 +40,7 @@
         <label class="switch-row" for="labels">Milestone annotations <input id="labels" type="checkbox" checked></label><label class="switch-row" for="poster">Poster typography & legend <input id="poster" type="checkbox" checked></label>
       </section>
       <section class="export-section">
-        <div class="section-heading"><h2>Make it tangible</h2><span class="section-number">03</span></div><label class="field-label" for="export-size">PNG · square · 300 dpi metadata</label>
+        <div class="section-heading"><h2>Make it tangible</h2><span class="section-number">04</span></div><label class="field-label" for="export-size">PNG · square · 300 dpi metadata</label>
         <select id="export-size"><option value="2048">2,048 px · study</option><option value="4096" selected>4,096 px · detailed proof</option><option value="7200">7,200 px · 24 × 24 in at 300 dpi</option></select>
         <button id="export" class="primary">Export artwork <span aria-hidden="true">↓</span></button><p class="privacy-note">Print export redraws every strand at the selected resolution. Use a desktop for the largest size.</p>
       </section>

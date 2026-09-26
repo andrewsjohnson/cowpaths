@@ -40,10 +40,10 @@ export function renderScene(canvas, scene, options = {}) {
     const alpha = path.alpha * settings.exposure;
     // Ribbon folds move through focus along their length. Older projects keep
     // their original endpoint-based softness for faithful reproduction.
-    const sections = settings.rendererVersion === '1.3.0' ? Array.from({length:Math.ceil((path.points.length-1)/24)},(_,i)=>({points:path.points.slice(i*24,Math.min(path.points.length,i*24+25))})) : [path];
+    const sections = ['1.3.0','1.4.0'].includes(settings.rendererVersion) ? Array.from({length:Math.ceil((path.points.length-1)/24)},(_,i)=>({points:path.points.slice(i*24,Math.min(path.points.length,i*24+25))})) : [path];
     let dashDistance=0;
     for (const section of sections) {
-      const z = section.points[Math.floor(section.points.length/2)][2], blur = Math.max(0, Math.abs((settings.rendererVersion === '1.3.0' ? z : path.points.at(-1)[2]) - settings.focus) - .06) * settings.aperture;
+      const z = section.points[Math.floor(section.points.length/2)][2], blur = Math.max(0, Math.abs((['1.3.0','1.4.0'].includes(settings.rendererVersion) ? z : path.points.at(-1)[2]) - settings.focus) - .06) * settings.aperture;
       if (settings.glow > 0) {
         drawPath(ctx, section, S, Y, path.color, alpha * .055 * settings.glow, path.width * 12 + blur * .012);
         drawPath(ctx, section, S, Y, path.color, alpha * .11 * settings.glow, path.width * 4 + blur * .008);
@@ -98,7 +98,7 @@ function drawLabels(ctx, scene, S, Y) {
   for (const milestone of scene.milestones) {
     const [ax, ay] = milestone.anchor, left = ax < .45;
     let x = clamp(ax + (left ? -.10 : .07), .055, .78), y = clamp(ay + (ay > .55 ? .09 : -.10), .18, .93);
-    if (scene.settings.rendererVersion === '1.3.0') {
+    if (['1.3.0','1.4.0'].includes(scene.settings.rendererVersion)) {
       const candidates=[];
       for(const radius of [.055,.09,.14,.20,.27]) for(let i=0;i<16;i++) {
         const angle=i*Math.PI/8, cx=clamp(ax+Math.cos(angle)*radius,.055,.78),cy=clamp(ay+Math.sin(angle)*radius,.18,.93);
@@ -128,7 +128,7 @@ function drawPoster(ctx, scene, S, Y) {
   ctx.fillStyle = '#cfe5d8'; font(ctx, S, .008, 500); tracking(ctx, 'OUR JOURNEY', S * .035, S * .865, S * .002); tracking(ctx, 'HOW TO READ', S * .365, S * .865, S * .0016);
   ctx.fillStyle = '#adc6ba'; font(ctx, S, .008);
   wrap(ctx, 'From a single order to a growing community. A living portrait of the connections that make care possible.', S * .035, S * .885, S * .26, S * .012);
-  wrap(ctx, scene.settings.rendererVersion === '1.3.0' ? 'History follows the folded stream. Every clinic keeps its own continuous strand.' : 'Time spirals from the center outward. Every clinic follows its own continuous strand.', S * .365, S * .885, S * .245, S * .012);
+  wrap(ctx, ['1.3.0','1.4.0'].includes(scene.settings.rendererVersion) ? 'History follows the folded stream. Every clinic keeps its own continuous strand.' : 'Time spirals from the center outward. Every clinic follows its own continuous strand.', S * .365, S * .885, S * .245, S * .012);
   wrap(ctx, 'Submissions branch into pharmacies, recipients and medications. Light gathers where activity grows.', S * .67, S * .885, S * .28, S * .012);
   ctx.strokeStyle = '#a4d7c4'; ctx.lineWidth = S * .0007; ctx.beginPath(); ctx.moveTo(S * .365, S * .925); ctx.lineTo(S * .394, S * .925); ctx.stroke();
   font(ctx, S, .0068); ctx.fillText('PATIENT', S * .403, S * .928);
