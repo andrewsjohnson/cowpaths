@@ -37,13 +37,22 @@ export function renderScene(canvas, scene, options = {}) {
   const paths = [...scene.trajectories].sort((a, b) => b.points.at(-1)[2] - a.points.at(-1)[2] || a.id.localeCompare(b.id));
   for (const path of paths) {
     const [x, y] = path.points.at(-1); if (x < -1 || x > 2 || y < -1 || y > 2) continue;
-    const z = path.points.at(-1)[2], blur = Math.max(0, Math.abs(z - settings.focus) - .06) * settings.aperture, alpha = path.alpha * settings.exposure;
-    if (settings.glow > 0) {
-      drawPath(ctx, path, S, Y, path.color, alpha * .055 * settings.glow, path.width * 12 + blur * .012);
-      drawPath(ctx, path, S, Y, path.color, alpha * .11 * settings.glow, path.width * 4 + blur * .008);
+    const alpha = path.alpha * settings.exposure;
+    // Ribbon folds move through focus along their length. Older projects keep
+    // their original endpoint-based softness for faithful reproduction.
+    const sections = settings.rendererVersion === '1.3.0' ? Array.from({length:Math.ceil((path.points.length-1)/24)},(_,i)=>({points:path.points.slice(i*24,Math.min(path.points.length,i*24+25))})) : [path];
+    let dashDistance=0;
+    for (const section of sections) {
+      const z = section.points[Math.floor(section.points.length/2)][2], blur = Math.max(0, Math.abs((settings.rendererVersion === '1.3.0' ? z : path.points.at(-1)[2]) - settings.focus) - .06) * settings.aperture;
+      if (settings.glow > 0) {
+        drawPath(ctx, section, S, Y, path.color, alpha * .055 * settings.glow, path.width * 12 + blur * .012);
+        drawPath(ctx, section, S, Y, path.color, alpha * .11 * settings.glow, path.width * 4 + blur * .008);
+      }
+      ctx.setLineDash(path.type === 'stock' && path.kind !== 'clinic' ? [.0019 * S, .0025 * S] : []);
+      ctx.lineDashOffset=-dashDistance;
+      drawPath(ctx, section, S, Y, path.color, alpha / (1 + blur * 18), path.width + blur * .004); ctx.setLineDash([]); ctx.lineDashOffset=0;
+      for(let i=1;i<section.points.length;i++) dashDistance+=Math.hypot((section.points[i][0]-section.points[i-1][0])*S,(section.points[i][1]-section.points[i-1][1])*Y);
     }
-    ctx.setLineDash(path.type === 'stock' && path.kind !== 'clinic' ? [.0019 * S, .0025 * S] : []);
-    drawPath(ctx, path, S, Y, path.color, alpha / (1 + blur * 18), path.width + blur * .004); ctx.setLineDash([]);
     const rng = random(`${settings.seed}/${path.id}/light`), count = path.kind === 'clinic' ? 90 : path.kind === 'submission' ? 22 : 3;
     for (let i = 0; i < count; i++) {
       const p = pointAt(path.points, rng()), [px, py] = toPoint(p), coc = Math.max(0, Math.abs(p[2] - settings.focus) - .06) * settings.aperture, rare = rng();
@@ -89,7 +98,17 @@ function drawLabels(ctx, scene, S, Y) {
   for (const milestone of scene.milestones) {
     const [ax, ay] = milestone.anchor, left = ax < .45;
     let x = clamp(ax + (left ? -.10 : .07), .055, .78), y = clamp(ay + (ay > .55 ? .09 : -.10), .18, .93);
-    for (let n = 0; n < 14 && used.some(p => Math.abs(x - p.x) < .20 && Math.abs(y - p.y) < .075); n++) { y += .078; if (y > .93) { y = .18; x = clamp(x + .21, .055, .78); } }
+    if (scene.settings.rendererVersion === '1.3.0') {
+      const candidates=[];
+      for(const radius of [.055,.09,.14,.20,.27]) for(let i=0;i<16;i++) {
+        const angle=i*Math.PI/8, cx=clamp(ax+Math.cos(angle)*radius,.055,.78),cy=clamp(ay+Math.sin(angle)*radius,.18,.93);
+        const overlaps=used.filter(p=>Math.abs(cx-p.x)<.20 && Math.abs(cy-p.y)<.065).length;
+        candidates.push({x:cx,y:cy,cost:overlaps*10+Math.hypot(cx-ax,cy-ay)+(cx<ax?.012:0)});
+      }
+      const best=candidates.sort((a,b)=>a.cost-b.cost)[0]; x=best.x; y=best.y;
+    } else {
+      for (let n = 0; n < 14 && used.some(p => Math.abs(x - p.x) < .20 && Math.abs(y - p.y) < .075); n++) { y += .078; if (y > .93) { y = .18; x = clamp(x + .21, .055, .78); } }
+    }
     used.push({ x, y }); const px = x * S, py = y * Y;
     ctx.strokeStyle = '#afd7ba99'; ctx.lineWidth = S * .0006; ctx.beginPath(); ctx.moveTo(ax * S, ay * Y); ctx.lineTo(px, py); ctx.stroke();
     sprite(ctx, ax * S, ay * Y, S * .0018, '#d5fdd0', .95);
@@ -109,7 +128,7 @@ function drawPoster(ctx, scene, S, Y) {
   ctx.fillStyle = '#cfe5d8'; font(ctx, S, .008, 500); tracking(ctx, 'OUR JOURNEY', S * .035, S * .865, S * .002); tracking(ctx, 'HOW TO READ', S * .365, S * .865, S * .0016);
   ctx.fillStyle = '#adc6ba'; font(ctx, S, .008);
   wrap(ctx, 'From a single order to a growing community. A living portrait of the connections that make care possible.', S * .035, S * .885, S * .26, S * .012);
-  wrap(ctx, 'Time spirals from the center outward. Every clinic follows its own continuous strand.', S * .365, S * .885, S * .245, S * .012);
+  wrap(ctx, scene.settings.rendererVersion === '1.3.0' ? 'History follows the folded stream. Every clinic keeps its own continuous strand.' : 'Time spirals from the center outward. Every clinic follows its own continuous strand.', S * .365, S * .885, S * .245, S * .012);
   wrap(ctx, 'Submissions branch into pharmacies, recipients and medications. Light gathers where activity grows.', S * .67, S * .885, S * .28, S * .012);
   ctx.strokeStyle = '#a4d7c4'; ctx.lineWidth = S * .0007; ctx.beginPath(); ctx.moveTo(S * .365, S * .925); ctx.lineTo(S * .394, S * .925); ctx.stroke();
   font(ctx, S, .0068); ctx.fillText('PATIENT', S * .403, S * .928);

@@ -3,8 +3,9 @@ import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { validateHistory, serializableHistory, demoHistory } from '../src/journey/data.mjs';
-import { buildScene, DEFAULTS, spine } from '../src/journey/scene.mjs';
+import { buildScene, DEFAULTS } from '../src/journey/scene.mjs';
 import { project, readProject, validateSettings, withPrintDensity } from '../src/journey/project.mjs';
+import { ribbonPoint } from '../src/journey/ribbon.mjs';
 import { frameAt, pointAt } from '../src/journey/math.mjs';
 import { buildScene as buildLegacyScene } from '../src/journey/scene-v1.mjs';
 import { convertCSV, parseCSV } from '../scripts/import-csv.mjs';
@@ -29,13 +30,14 @@ test('all branch levels start on their parent and leave in its forward direction
     }
   }
 });
-test('inner and outer clinic lanes expand without folding across the origin', () => {
-  for (const lane of [-.019, 0, .019]) {
-    let previous = 0;
-    for (let i = 0; i <= 1000; i++) {
-      const p = spine(i / 1000, lane), radius = Math.hypot(p[0] - .408, (p[1] - .59) / 1.2);
-      assert.ok(radius > 0 && radius >= previous - 1e-12); previous = radius;
-    }
+test('ribbon silhouette stays framed and clinic lanes remain separate in 3D', () => {
+  const scene = buildScene(demoHistory());
+  for (const path of scene.trajectories) for(const p of path.points) {
+    assert.ok(p[0] > .08 && p[0] < .95 && p[1] > .02 && p[1] < .95, `${path.id} escaped the composition`);
+  }
+  for(let i=0;i<=1000;i++) {
+    const a=ribbonPoint(i/1000,-.01),b=ribbonPoint(i/1000,.01);
+    assert.ok(Math.hypot(...a.map((v,k)=>v-b[k])) > .005, 'Clinic strands merged in space');
   }
 });
 test('input reordering preserves geometry; seeds change geometry without changing topology', () => {
@@ -76,8 +78,8 @@ test('old projects retain original geometry and new projects use the revised ren
   assert.equal(loaded.settings.rendererVersion, '1.0.0');
   assert.deepEqual(buildScene(loaded.history, loaded.settings).trajectories, buildLegacyScene(history, oldSettings).trajectories);
   assert.equal(project(loaded.history, loaded.settings).rendererVersion, '1.0.0');
-  assert.equal(project(history, DEFAULTS).rendererVersion, '1.2.0');
-  assert.equal(readProject(serializableHistory(history)).settings.rendererVersion, '1.2.0');
+  assert.equal(project(history, DEFAULTS).rendererVersion, '1.3.0');
+  assert.equal(readProject(serializableHistory(history)).settings.rendererVersion, '1.3.0');
   assert.throws(() => readProject({ ...saved, rendererVersion: '9.0.0' }), /Unsupported/);
   assert.throws(() => readProject({ ...saved, settings: DEFAULTS }), /disagree/);
 });
@@ -86,6 +88,11 @@ test('renderer 1.1 projects preserve the previously published geometry', () => {
   const loaded = readProject(saved), scene = buildScene(loaded.history, loaded.settings);
   assert.equal(createHash('sha256').update(JSON.stringify(scene.trajectories)).digest('hex'), 'a84b1a7d9624bd4a6d304adfd58219d07a632d85bd5e02081c7237e22be39ca0');
   assert.notDeepEqual(scene.trajectories, buildScene(tiny()).trajectories);
+});
+test('renderer 1.2 projects preserve the previously published geometry', async () => {
+  const { buildScene: previous } = await import('../src/journey/scene-v2.mjs');
+  const saved = project(tiny(), { ...DEFAULTS, rendererVersion: '1.2.0' }), loaded = readProject(saved);
+  assert.deepEqual(buildScene(loaded.history,loaded.settings).trajectories,previous(loaded.history,loaded.settings).trajectories);
 });
 test('CSV adapter preserves hierarchy, discards source keys and handles quoted fields', async () => {
   const csv = await readFile(new URL('../examples/history-rows.csv', import.meta.url), 'utf8'), result = convertCSV(csv, 'Test'), encoded = JSON.stringify(result);

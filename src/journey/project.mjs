@@ -1,6 +1,6 @@
 import { DEFAULTS, PALETTES, RENDERER_VERSION } from './scene.mjs';
 import { serializableHistory, validateHistory } from './data.mjs';
-const rendererVersions = new Set(['1.0.0', '1.1.0', RENDERER_VERSION]);
+const rendererVersions = new Set(['1.0.0', '1.1.0', '1.2.0', RENDERER_VERSION]);
 export function validateSettings(value = {}) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Project settings must be an object.');
   const settings = { ...DEFAULTS }, bounds = { glow: [0, 1.5], exposure: [.3, 1.8], focus: [-.2, .2], aperture: [0, 1.5], turbulence: [0, 1.5], spread: [.5, 1.5], maxSubmissions: [1, 20000], through: [0, 1] };

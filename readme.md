@@ -1,6 +1,6 @@
 # Cowpaths
 
-A generative-art studio for turning company history into luminous, branching strands. The VITL study uses a small curl that unfurls into a rising stream, flowing plumes, hairline paths, mint/citron light, soft depth, and a print-oriented editorial layout.
+A generative-art studio for turning company history into luminous, branching strands. The VITL study uses a shared surface of flowing ribbons, broad folds and open loops, hairline paths, mint/citron light, soft depth, and a print-oriented editorial layout.
 
 ![Synthetic VITL history rendered by Cowpaths](docs/preview.jpg)
 
@@ -55,14 +55,14 @@ Keep raw exports outside this public repository. `private-data/` and `*.local.js
 | --- | --- |
 | Clinic and joining month | One persistent lane, beginning at its joining month |
 | Submission and month | One branch leaving that clinic at its chronological position |
-| Pharmacy fulfillment | A child branch with pharmacy-dependent curvature |
+| Pharmacy fulfillment | A child branch with pharmacy-dependent lane separation |
 | Recipient in that fulfillment | A child branch; no identity is needed |
 | Medication count | One terminal branch per counted medication |
 | Patient / clinic-stock shipment | Solid / dashed path cores |
 | More activity | More overlapping actual trajectories and light |
 | Public milestone | Numbered leader anchored to that month |
 
-This is an artistic encoding, not a quantitative dashboard. Path length, depth, three flow groups, free curls, light particles and palette variation are composed rather than measured. Recipient counts describe fulfillment recipients, **not distinct patients across the company**. Grain and point lights are decorative, not additional submissions. See [rendering notes](docs/rendering.md) for the explicit limits.
+This is an artistic encoding, not a quantitative dashboard. Path length, depth, ribbon shape and lane groups, light particles and palette variation are composed rather than measured. Recipient counts describe fulfillment recipients, **not distinct patients across the company**. Grain and point lights are decorative, not additional submissions. See [rendering notes](docs/rendering.md) for the explicit limits.
 
 ## Original particle experiment
 
@@ -79,7 +79,7 @@ The historical dependency set is preserved. The new studio does not import it. O
 
 ## Verification
 
-`npm test` runs thirteen contracts covering hierarchy counts, branch attachment and departure angles, expanding clinic lanes, determinism, timeline cutoffs, sampling, medication-count changes, input rejection, current and legacy project round trips, CSV conversion and PNG density metadata.
+`npm test` runs fourteen contracts covering hierarchy counts, branch attachment and departure angles, separate clinic lanes and a framed ribbon silhouette, determinism, timeline cutoffs, sampling, medication-count changes, input rejection, current and legacy project round trips, CSV conversion and PNG density metadata.
 
 An optional browser integration check requires a separately supplied Playwright installation and Chromium binary:
 
@@ -95,7 +95,8 @@ It checks the worker and fallback renderer, imports, invalid-file handling, proj
 | --- | --- |
 | `src/journey/data.mjs` | Input validation and synthetic history |
 | `src/journey/scene.mjs` | Deterministic hierarchy and current geometry |
-| `src/journey/scene-v1.mjs` | Original geometry for saved 1.0.0 projects |
+| `src/journey/ribbon.mjs` | Shared 3D ribbon and smooth attached branches |
+| `src/journey/scene-v1.mjs`, `scene-v2.mjs` | Geometry compatibility for saved 1.0–1.2 projects |
 | `src/journey/render.mjs` | Strands, light, labels and poster layout |
 | `src/journey/worker.mjs` | Background rendering and PNG encoding |
 | `src/journey/project.mjs` | Project format and print-density metadata |
