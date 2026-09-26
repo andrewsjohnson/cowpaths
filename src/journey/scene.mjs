@@ -3,11 +3,12 @@ import { monthIndex, monthString } from './data.mjs';
 import { buildScene as buildPreviousScene, DEFAULTS as PREVIOUS_DEFAULTS, PALETTES } from './scene-v2.mjs';
 import { ribbonPoint, clinicRibbon, branchRibbon } from './ribbon.mjs';
 import { applyTrailDetails } from './attractors.mjs';
+import { applyTrailDetails as applyV14 } from './attractors-v14.mjs';
 export { PALETTES };
-export const RENDERER_VERSION = '1.4.0';
-export const DEFAULTS = Object.freeze({ ...PREVIOUS_DEFAULTS, detail: .65, attraction: .65, attractorRadius: .055, rendererVersion: RENDERER_VERSION });
+export const RENDERER_VERSION = '1.5.0';
+export const DEFAULTS = Object.freeze({ ...PREVIOUS_DEFAULTS, detailSeed: 'VITL-2026', quiet: .4, attractorDensity: .7, dataInfluence: .6, motion: 'guided', detail: .65, attraction: .65, attractorRadius: .055, rendererVersion: RENDERER_VERSION });
 export function buildScene(history, requested = {}) {
-  if (requested.rendererVersion && !['1.3.0', RENDERER_VERSION].includes(requested.rendererVersion)) return buildPreviousScene(history, requested);
+  if (requested.rendererVersion && !['1.3.0', '1.4.0', RENDERER_VERSION].includes(requested.rendererVersion)) return buildPreviousScene(history, requested);
   const settings = { ...DEFAULTS, ...requested }, trajectories = [], events = [], clinics = new Map();
   const span = Math.max(1, history.stats.end - history.stats.start + 1), time = month => (monthIndex(month) - history.stats.start) / span;
   const cutoffMonth = Math.min(history.stats.end, history.stats.start + Math.floor(clamp(settings.through) * span));
@@ -54,8 +55,8 @@ export function buildScene(history, requested = {}) {
       });
     });
   }
-  const attractors = settings.rendererVersion === RENDERER_VERSION ? applyTrailDetails(trajectories,settings) : [];
-  if(settings.rendererVersion === RENDERER_VERSION){
+  const attractors = settings.rendererVersion === RENDERER_VERSION ? applyTrailDetails(trajectories,settings,history) : settings.rendererVersion === '1.4.0' ? applyV14(trajectories,settings) : [];
+  if(['1.4.0',RENDERER_VERSION].includes(settings.rendererVersion)){
     const lookup=new Map(trajectories.map(path=>[path.id,path]));
     for(const event of events){const path=lookup.get(event.id);event.origin=path.points[0];event.anchor=pointAt(path.points,.68);}
   }

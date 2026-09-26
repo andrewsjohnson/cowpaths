@@ -1,16 +1,17 @@
 import { DEFAULTS, PALETTES, RENDERER_VERSION } from './scene.mjs';
 import { serializableHistory, validateHistory } from './data.mjs';
-const rendererVersions = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', RENDERER_VERSION]);
+const rendererVersions = new Set(['1.0.0', '1.1.0', '1.2.0', '1.3.0', '1.4.0', RENDERER_VERSION]);
 export function validateSettings(value = {}) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Project settings must be an object.');
-  const settings = { ...DEFAULTS }, bounds = { detail: [0, 1.5], attraction: [0, 1.5], attractorRadius: [.015, .10], glow: [0, 1.5], exposure: [.3, 1.8], focus: [-.2, .2], aperture: [0, 1.5], turbulence: [0, 1.5], spread: [.5, 1.5], maxSubmissions: [1, 20000], through: [0, 1] };
+  const settings = { ...DEFAULTS }, bounds = { quiet: [0,1], attractorDensity: [0,1], dataInfluence: [0,1], detail: [0, 1.5], attraction: [0, 1.5], attractorRadius: [.015, .10], glow: [0, 1.5], exposure: [.3, 1.8], focus: [-.2, .2], aperture: [0, 1.5], turbulence: [0, 1.5], spread: [.5, 1.5], maxSubmissions: [1, 20000], through: [0, 1] };
   for (const [key, val] of Object.entries(value)) {
     if (!Object.hasOwn(DEFAULTS, key)) throw new Error('Project settings contain an unsupported field.');
     if (Object.hasOwn(bounds, key)) {
       if (typeof val !== 'number' || !Number.isFinite(val) || val < bounds[key][0] || val > bounds[key][1]) throw new Error(`Project setting ${key} is outside the supported range.`);
       if (key === 'maxSubmissions' && !Number.isInteger(val)) throw new Error('Submission budget must be an integer.');
-    } else if (key === 'seed') {
+    } else if (['seed','detailSeed'].includes(key)) {
       if (typeof val !== 'string' || !val.trim() || val.length > 64) throw new Error('Composition seed must contain 1–64 characters.');
+    } else if (key === 'motion') { if (!['guided','advected'].includes(val)) throw new Error('Unknown motion mode.');
     } else if (key === 'rendererVersion') { if (!rendererVersions.has(val)) throw new Error('Unsupported renderer version.'); }
     else if (key === 'palette') { if (!Object.hasOwn(PALETTES, val)) throw new Error('Unknown color story.'); }
     else if (typeof val !== 'boolean') throw new Error(`Project setting ${key} must be a boolean.`);

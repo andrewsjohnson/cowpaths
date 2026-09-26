@@ -1,6 +1,6 @@
 {
   "browser": "153.0.8010.0",
-  "readyMs": 3780,
+  "readyMs": 3865,
   "submissions": 947,
   "cases": [
     "worker render",
@@ -9,6 +9,9 @@
     "timeline cutoff",
     "seed changes canvas",
     "detail and attractor controls change canvas",
+    "independent detail seed",
+    "print crop and physical dimensions",
+    "crop matches full render",
     "project reproduces canvas",
     "legacy project reproduces original renderer",
     "reset style upgrades legacy flow",

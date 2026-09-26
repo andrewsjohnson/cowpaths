@@ -78,8 +78,8 @@ test('old projects retain original geometry and new projects use the revised ren
   assert.equal(loaded.settings.rendererVersion, '1.0.0');
   assert.deepEqual(buildScene(loaded.history, loaded.settings).trajectories, buildLegacyScene(history, oldSettings).trajectories);
   assert.equal(project(loaded.history, loaded.settings).rendererVersion, '1.0.0');
-  assert.equal(project(history, DEFAULTS).rendererVersion, '1.4.0');
-  assert.equal(readProject(serializableHistory(history)).settings.rendererVersion, '1.4.0');
+  assert.equal(project(history, DEFAULTS).rendererVersion, '1.5.0');
+  assert.equal(readProject(serializableHistory(history)).settings.rendererVersion, '1.5.0');
   assert.throws(() => readProject({ ...saved, rendererVersion: '9.0.0' }), /Unsupported/);
   assert.throws(() => readProject({ ...saved, settings: DEFAULTS }), /disagree/);
 });

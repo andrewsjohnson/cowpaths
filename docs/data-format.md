@@ -91,8 +91,10 @@ The adapter deliberately does not guess a database query. Select production tabl
 
 ## Projects
 
-**Save project** writes a `cowpaths-project` object with version 1, renderer version 1.4.0 for new studies, validated history and composition settings. Reopen it with the same input control. It contains a copy of the history. No browser storage is used, so save before closing the tab if you want to retain your study.
+**Save project** writes a `cowpaths-project` object with version 1, renderer version 1.5.0 for new studies, validated history and composition settings. Reopen it with the same input control. It contains a copy of the history. No browser storage is used, so save before closing the tab if you want to retain your study.
 
-Projects saved with renderer 1.0.0, 1.1.0, 1.2.0 or 1.3.0 reopen with their original flow. Choose **Reset style** to adopt the current geometry and default composition settings, then save a new project. Unsupported or conflicting renderer versions are rejected.
+Projects saved with renderer 1.0.0, 1.1.0, 1.2.0, 1.3.0 or 1.4.0 reopen with their original flow. Choose **Reset style** to adopt the current geometry and default composition settings, then save a new project. Unsupported or conflicting renderer versions are rejected.
 
-Branch detail, attractor strength and attractor reach are saved with the composition. These controls are disabled for older renderer projects until **Reset style** upgrades the study.
+Branch detail, attractor strength and attractor reach are saved with the composition. The original three detail controls remain available for renderer 1.4 projects. New 1.5 controls require **Reset style** to upgrade older projects.
+
+Renderer 1.5 also saves an independent detail/light seed, quiet-region amount, attractor frequency, history influence and guided/advected motion. History influence uses medication counts and pharmacy keys already present in the schema. No extra fields are required. Print-inspection position and intended paper size are temporary viewing controls.

@@ -20,9 +20,10 @@ function syncControls() {
     else { if (input.tagName === 'SELECT' && ![...input.options].some(o => o.value === String(settings[key]))) input.add(new Option(String(settings[key]), String(settings[key]))); input.value = settings[key]; }
     if ($(`${key}-value`)) $(`${key}-value`).textContent = Number(settings[key]).toFixed(key === 'attractorRadius' ? 3 : 2);
   }
-  const legacyDetail = settings.rendererVersion !== DEFAULTS.rendererVersion;
+  const legacyDetail = !['1.4.0',DEFAULTS.rendererVersion].includes(settings.rendererVersion);
+  for (const key of ['detailSeed','reseed-detail','quiet','attractorDensity','dataInfluence','motion']) $(key).disabled = settings.rendererVersion !== DEFAULTS.rendererVersion;
   for (const key of ['detail','attraction','attractorRadius']) $(key).disabled = legacyDetail;
-  $('detail-legacy-note').hidden = !legacyDetail;
+  $('detail-legacy-note').hidden = settings.rendererVersion === DEFAULTS.rendererVersion;
   $('source-badge').textContent = history.synthetic ? 'SAMPLE' : 'IMPORTED';
   $('source-description').textContent = `${history.synthetic ? 'Imagined' : 'Imported'} ${history.title} history · ${monthString(history.stats.start)} to ${monthString(history.stats.end)}.`;
   $('preview-title').textContent = `${history.title.toUpperCase()} / ${history.synthetic ? 'CONCEPT STUDY' : 'HISTORY STUDY'}`; $('start-date').textContent = monthString(history.stats.start);
@@ -64,13 +65,14 @@ function schedule(delay = 120) { clearTimeout(timer); timer = setTimeout(render,
 for (const key of controls) {
   const input = $(key); if (!input) continue;
   input.addEventListener(input.type === 'text' ? 'change' : 'input', () => {
-    if (input.type === 'text' && !input.value.trim()) input.value = DEFAULTS.seed;
-    settings[key] = input.type === 'checkbox' ? input.checked : ['seed', 'palette'].includes(key) ? input.value : Number(input.value);
+    if (input.type === 'text' && !input.value.trim()) input.value = DEFAULTS[key];
+    settings[key] = input.type === 'checkbox' ? input.checked : ['seed', 'detailSeed', 'palette', 'motion'].includes(key) ? input.value : Number(input.value);
     if ($(`${key}-value`)) $(`${key}-value`).textContent = Number(settings[key]).toFixed(key === 'attractorRadius' ? 3 : 2);
     if (key === 'through') stopPlayback(); schedule();
   });
 }
 $('reseed').addEventListener('click', () => { settings.seed = `study-${crypto.getRandomValues(new Uint32Array(1))[0].toString(36)}`; syncControls(); schedule(0); });
+$('reseed-detail').addEventListener('click', () => { settings.detailSeed = `detail-${crypto.getRandomValues(new Uint32Array(1))[0].toString(36)}`; syncControls(); schedule(0); });
 $('reset-style').addEventListener('click', () => { stopPlayback(); settings = { ...DEFAULTS }; syncControls(); schedule(0); });
 $('reset-data').addEventListener('click', () => { stopPlayback(); history = demoHistory(); settings.through = 1; syncControls(); schedule(0); });
 $('sample-json').addEventListener('click', () => download(json(serializableHistory(demoHistory())), 'cowpaths-synthetic-history.json'));
@@ -105,3 +107,31 @@ $('export').addEventListener('click', async () => {
   finally { exporting = false; $('export').disabled = false; $('export').innerHTML = 'Export artwork <span aria-hidden="true">↓</span>'; $('render-indicator').hidden = true; if (queued) { queued = false; schedule(0); } }
 });
 syncControls(); schedule(0);
+
+let proofWorker,proofSerial=0;
+function printScale() {
+  const size=Number($('export-size').value),inches=Number($('print-inches').value),ppi=size/inches;
+  $('print-scale').textContent=`${size.toLocaleString()} px across ${inches} in = ${ppi.toFixed(1)} pixels/inch. The 900 px crop covers ${(900/ppi).toFixed(2)} × ${(900/ppi).toFixed(2)} inches of paper. Export metadata remains 300 dpi; set the intended size when printing.`;
+}
+async function inspectPrint() {
+  stopPlayback(); const id=++proofSerial; proofWorker?.terminate(); printScale();
+  const size=Number($('export-size').value),crop={size:900,x:Math.round(Number($('crop-x').value)*(size-900)),y:Math.round(Number($('crop-y').value)*(size-900))};
+  $('refresh-print').disabled=true; $('refresh-print').textContent='Rendering crop…'; $('print-crop').dataset.ready='false';
+  try {
+    if(typeof Worker!=='undefined' && typeof OffscreenCanvas!=='undefined') {
+      await new Promise((resolve,reject)=>{
+        proofWorker=new Worker(new URL('./worker.mjs',import.meta.url),{type:'module'});
+        proofWorker.onmessage=({data})=>{if(data.error){reject(new Error(data.error));return;}const c=$('print-crop');c.width=900;c.height=900;c.getContext('2d').drawImage(data.bitmap,0,0);data.bitmap.close();resolve();};
+        proofWorker.onerror=()=>reject(new Error('Print inspection failed. Try a smaller export size.'));
+        proofWorker.postMessage({id,history,settings:{...settings},size,crop});
+      });
+    } else { await new Promise(resolve=>setTimeout(resolve,25));renderScene($('print-crop'),buildScene(history,settings),{width:size,crop}); }
+    if(id===proofSerial)$('print-crop').dataset.ready='true';
+  } catch(error){errors(error.message);$('print-scale').textContent=error.message;}
+  finally {if(id===proofSerial){proofWorker?.terminate();proofWorker=undefined;$('refresh-print').disabled=false;$('refresh-print').textContent='Render this crop';}}
+}
+$('inspect-print').addEventListener('click',()=>{$('print-dialog').showModal();inspectPrint();});
+$('close-print').addEventListener('click',()=>$('print-dialog').close());
+$('print-dialog').addEventListener('close',()=>{proofSerial++;proofWorker?.terminate();proofWorker=undefined;$('refresh-print').disabled=false;$('refresh-print').textContent='Render this crop';});
+$('refresh-print').addEventListener('click',inspectPrint);
+$('print-inches').addEventListener('input',printScale);

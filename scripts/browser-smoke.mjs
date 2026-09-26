@@ -24,11 +24,32 @@ try {
   await change('through', 1); assert.equal(await page.locator('#count-submissions').textContent(), '3');
   await page.locator('#history-file').setInputFiles({ name: 'invalid.json', mimeType: 'application/json', buffer: Buffer.from('{"version":1,"patientName":"forbidden"}') }); await page.locator('#error').waitFor({ state: 'visible' }); assert.equal(await page.locator('#count-submissions').textContent(), '3');
   let detailCanvas = await page.locator('#art').evaluate(c => c.toDataURL());
-  for(const [id,value] of [['detail',1.2],['attraction',1.1],['attractorRadius',.08]]) {
+  for(const [id,value] of [['detail',1.2],['attraction',1.1],['attractorRadius',.08],['quiet',.85],['dataInfluence',1],['motion','advected']]) {
     await change(id,value); const changed = await page.locator('#art').evaluate(c => c.toDataURL());
     assert.notEqual(changed,detailCanvas,`${id} must change the render`); detailCanvas=changed;
   }
   assert.equal(await page.locator('#count-tracks').textContent(),'26');
+  await page.locator('#reseed-detail').click(); await page.waitForFunction(() => document.querySelector('#art').dataset.ready === 'false'); await ready();
+  assert.equal(await page.locator('#seed').inputValue(),'VITL-2026');
+  assert.notEqual(await page.locator('#art').evaluate(c=>c.toDataURL()),detailCanvas);
+  await page.locator('#inspect-print').click();await page.waitForFunction(()=>document.querySelector('#print-crop').dataset.ready==='true',null,{timeout:120000});
+  assert.equal(await page.locator('#print-crop').evaluate(c=>c.width),900);
+  assert.ok((await page.locator('#print-scale').textContent()).includes('170.7 pixels/inch'));
+  await page.locator('#print-inches').selectOption('40');assert.ok((await page.locator('#print-scale').textContent()).includes('102.4 pixels/inch'));
+  await page.screenshot({path:`${out}/print-inspection.png`});
+  // Compare against the corresponding pixels of a full export, including off-crop halos.
+  assert.equal(await page.evaluate(async()=>{
+    const {renderScene}=await import('/src/journey/render.mjs'),{buildScene}=await import('/src/journey/scene.mjs'),{demoHistory}=await import('/src/journey/data.mjs');
+    const scene=buildScene(demoHistory(),{maxSubmissions:5}),full=new OffscreenCanvas(2048,2048),crop=new OffscreenCanvas(400,400);
+    renderScene(full,scene,{width:2048});renderScene(crop,scene,{width:2048,crop:{x:650,y:500,size:400}});
+    const a=full.getContext('2d').getImageData(650,500,400,400).data,b=crop.getContext('2d').getImageData(0,0,400,400).data;
+    // Canvas clips and rasterizes translated hairlines slightly differently.
+    // Bound both overall error and the fraction beyond one intensity step.
+    let sum=0,outliers=0,max=0;
+    for(let i=0;i<a.length;i++){const d=Math.abs(a[i]-b[i]);sum+=d;max=Math.max(max,d);if(d>1)outliers++;}
+    return sum/a.length<.2 && outliers/a.length<.001 && max<=12;
+  }),true);
+  await page.locator('#close-print').click();
   await change('glow', 0); const before = await page.locator('#art').evaluate(c => c.toDataURL());
   const projectEvent = page.waitForEvent('download'); await page.locator('#save-project').click(); const projectDownload = await projectEvent; await projectDownload.saveAs(`${out}/project.json`);
   await page.locator('#reseed').click(); await page.waitForFunction(() => document.querySelector('#art').dataset.ready === 'false'); await ready(); assert.notEqual(await page.locator('#art').evaluate(c => c.toDataURL()), before);
@@ -62,6 +83,6 @@ try {
   }
   const fallback = await browser.newPage({ viewport: { width: 1000, height: 900 } }); await fallback.addInitScript(() => { window.Worker = undefined; }); fallback.on('pageerror', error => pageErrors.push(error.message)); await fallback.goto('http://127.0.0.1:8093/'); await fallback.waitForFunction(() => document.querySelector('#art').dataset.ready === 'true', null, { timeout: 120000 }); assert.equal(await fallback.locator('#count-submissions').textContent(), '947'); await fallback.close();
   assert.deepEqual(pageErrors, []); assert.deepEqual(external, []);
-  const report = { browser: browser.version(), readyMs, submissions: 947, cases: ['worker render', 'import', 'invalid import preserves study', 'timeline cutoff', 'seed changes canvas', 'detail and attractor controls change canvas', 'project reproduces canvas', 'legacy project reproduces original renderer', 'reset style upgrades legacy flow', '2048px export and 300dpi metadata', 'mobile no overflow', 'focus view', 'main-thread fallback', ...(process.env.TEST_PRINT === '1' ? ['7200px print export'] : [])], errors: pageErrors, externalRequests: external };
+  const report = { browser: browser.version(), readyMs, submissions: 947, cases: ['worker render', 'import', 'invalid import preserves study', 'timeline cutoff', 'seed changes canvas', 'detail and attractor controls change canvas', 'independent detail seed', 'print crop and physical dimensions', 'crop matches full render', 'project reproduces canvas', 'legacy project reproduces original renderer', 'reset style upgrades legacy flow', '2048px export and 300dpi metadata', 'mobile no overflow', 'focus view', 'main-thread fallback', ...(process.env.TEST_PRINT === '1' ? ['7200px print export'] : [])], errors: pageErrors, externalRequests: external };
   await writeFile(`${out}/browser-report.json`, JSON.stringify(report, null, 2) + '\n'); console.log(JSON.stringify(report, null, 2));
 } finally { await browser?.close(); server.kill(); }

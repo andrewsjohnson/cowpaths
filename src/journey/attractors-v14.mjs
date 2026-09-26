@@ -27,25 +27,20 @@ function attach(points,parent,fraction) {
   }
   points[0]=[...origin];
 }
-export function activityAt(u,settings) {
-  const phase=hash(`${settings.detailSeed}/quiet`)/4294967296*TAU;
-  const wave=.5+.5*Math.sin(u*TAU*2.2+phase);
-  return 1-settings.quiet*(1-wave*wave);
-}
 function diverge(paths,settings) {
   if(settings.detail===0) return;
   const parents=new Map(),packets=new Map();
   const scale={submission:.018,pharmacy:.009,recipient:.0045,stock:.0045,medication:.0022};
   for(const path of paths) {
     if(path.kind==='clinic'){parents.set(path.id,path);packets.set(path.id,[]);continue;}
-    const rng=random(`${settings.detailSeed ?? settings.seed}/${path.id}/detail`);
+    const rng=random(`${settings.seed}/${path.id}/detail`);
     const packet={start:path.flow.start,end:path.flow.end,amplitude:scale[path.kind]*settings.detail*(.6+rng()*.8),phase:rng()*TAU,frequency:.8+rng()*1.2};
     const inherited=[...packets.get(path.parentId),packet];packets.set(path.id,inherited);
     path.points=path.points.map((p,i)=>{
       const u=lerp(path.flow.start,path.flow.end,i/(path.points.length-1));let a=0,b=0;
       for(const wave of inherited){
         const t=(u-wave.start)/(wave.end-wave.start),e=trailEnvelope(t);if(!e)continue;
-        const phase=t*TAU*wave.frequency+wave.phase,amp=wave.amplitude*e*activityAt(u,settings);
+        const phase=t*TAU*wave.frequency+wave.phase,amp=wave.amplitude*e;
         a+=amp*(Math.sin(phase)+.28*Math.sin(phase*2.7)+.09*Math.sin(phase*6.1));
         b+=amp*.42*Math.cos(phase*1.3);
       }
@@ -54,20 +49,12 @@ function diverge(paths,settings) {
     attach(path.points,parents.get(path.parentId),path.parentFraction);parents.set(path.id,path);
   }
 }
-export function selectAttractors(paths,settings,history) {
-  if(settings.attraction===0 || settings.attractorDensity===0) return [];
-  const candidates=paths.filter(p=>p.kind==='submission');
-  const sources=candidates.sort((a,b)=>hash(`${settings.detailSeed ?? settings.seed}/${a.id}/attractor`)-hash(`${settings.detailSeed ?? settings.seed}/${b.id}/attractor`)||a.id.localeCompare(b.id)).slice(0,Math.ceil(Math.min(32,candidates.length)*settings.attractorDensity));
-  const business=new Map((history?.submissions??[]).map(s=>[s.id,{size:s.fulfillments.reduce((n,f)=>n+f.recipients.reduce((a,r)=>a+r.medicationCount,0),0),pharmacyKey:s.fulfillments.map(f=>f.pharmacyId).sort().join('/')} ]));
-  const sizes=paths.filter(p=>p.kind==='submission').map(p=>business.get(p.id)?.size??1).sort((a,b)=>a-b);
-  const typical=sizes[Math.floor(sizes.length/2)]??1;
+export function selectAttractors(paths,settings) {
+  if(settings.attraction===0) return [];
+  const sources=paths.filter(p=>p.kind==='submission').sort((a,b)=>hash(`${settings.seed}/${a.id}/attractor`)-hash(`${settings.seed}/${b.id}/attractor`)||a.id.localeCompare(b.id)).slice(0,32);
   return sources.map(path=>{
-    const rng=random(`${settings.detailSeed ?? settings.seed}/${path.id}/attractor-shape`),radius=settings.attractorRadius*[.4,.8,1.4][hash(path.id)%3];
-    const sizeWeight=clamp(Math.log2(1+(business.get(path.id)?.size??1))/Math.log2(1+typical),.5,2);
-    const businessHash=hash(business.get(path.id)?.pharmacyKey??path.id),influence=settings.dataInfluence;
-    const reachWeight=lerp(1,.75+(businessHash%101)/200,influence);
-    const activity=activityAt((path.flow.start+path.flow.end)/2,settings);
-    return {id:path.id,sizeWeight,pharmacyKey:business.get(path.id)?.pharmacyKey,start:path.flow.start,end:path.flow.end,points:path.points,radius:radius*reachWeight,strength:settings.attraction*(.65+rng()*.35)*lerp(1,sizeWeight,influence)*activity,spin:lerp((rng()<.5?-1:1)*.45,(businessHash%2?1:-1)*.45,influence)};
+    const rng=random(`${settings.seed}/${path.id}/attractor-shape`),radius=settings.attractorRadius*[.4,.8,1.4][hash(path.id)%3];
+    return {id:path.id,start:path.flow.start,end:path.flow.end,points:path.points,radius,strength:settings.attraction*(.65+rng()*.35),spin:(rng()<.5?-1:1)*.45};
   });
 }
 /** Local bounded attraction plus a weak tangential component; no point masses. */
@@ -85,10 +72,10 @@ export function attractionAt(p,u,sources,excludeId) {
   }
   const divisor=Math.max(1,total);return [fx/divisor,fy/divisor,fz/divisor];
 }
-export function applyTrailDetails(paths,settings,history) {
+export function applyTrailDetails(paths,settings) {
   if(settings.detail===0 && settings.attraction===0)return [];
   diverge(paths,settings);
-  const sources=selectAttractors(paths,settings,history);if(!sources.length)return [];
+  const sources=selectAttractors(paths,settings);if(!sources.length)return [];
   const sourceIds=new Set(sources.map(s=>s.id)),parents=new Map(),offsets=new Map();
   const buckets=Array.from({length:128},()=>[]);
   for(const source of sources)for(let i=Math.floor(source.start*128);i<=Math.min(127,Math.floor(source.end*128));i++)buckets[i].push(source);
@@ -97,20 +84,12 @@ export function applyTrailDetails(paths,settings,history) {
     if(path.kind==='clinic' || sourceIds.has(path.id)){
       parents.set(path.id,path);offsets.set(path.id,baseline.map(()=>[0,0,0]));continue;
     }
-    let offset=pointAt(offsets.get(path.parentId),path.parentFraction),velocity=[0,0,0];
+    let offset=pointAt(offsets.get(path.parentId),path.parentFraction);
     path.points=baseline.map((p,i)=>{
       const u=lerp(path.flow.start,path.flow.end,i/(baseline.length-1));
       const force=attractionAt(p,u,buckets[Math.min(127,Math.floor(u*128))],path.id);
       const ds=i?Math.hypot(...p.map((v,k)=>v-baseline[i-1][k])):0,alpha=1-Math.exp(-ds/.012);
-      if(settings.motion==='advected') {
-        // Integrate a damped particle displacement around the moving ribbon guide.
-        // Arc-length substeps keep momentum stable across different path sampling.
-        const steps=Math.max(1,Math.ceil(ds/.001)),dt=ds/steps;
-        for(let step=0;step<steps;step++) {
-          velocity=velocity.map((v,k)=>(v+(force[k]-offset[k])*1800*dt)*Math.exp(-35*dt));
-          offset=offset.map((v,k)=>v+velocity[k]*dt);
-        }
-      } else offset=offset.map((v,k)=>lerp(v,force[k],alpha));
+      offset=offset.map((v,k)=>lerp(v,force[k],alpha));
       const magnitude=Math.hypot(...offset),cap=settings.attractorRadius*.35*settings.attraction;
       if(magnitude>cap)offset=offset.map(v=>v*cap/magnitude);
       return p.map((v,k)=>v+offset[k]);

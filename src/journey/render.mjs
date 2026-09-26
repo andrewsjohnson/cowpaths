@@ -17,9 +17,10 @@ function drawPath(ctx, path, scale, yscale, color, alpha, width) {
 /** Rebuild the same composition at any square output resolution. */
 export function renderScene(canvas, scene, options = {}) {
   const width = options.width ?? canvas.width;
-  canvas.width = width; canvas.height = width;
+  canvas.width = options.crop?.size ?? width; canvas.height = options.crop?.size ?? width;
   const ctx = canvas.getContext('2d', { alpha: false });
   if (!ctx) throw new Error('A 2D canvas is not available in this browser.');
+  if(options.crop) ctx.translate(-options.crop.x,-options.crop.y);
   const { settings, history } = scene, S = width, Y = S * (settings.poster ? .84 : 1), toPoint = p => [p[0] * S, p[1] * Y];
   ctx.fillStyle = '#041511'; ctx.fillRect(0, 0, S, S);
   const atmosphere = ctx.createRadialGradient(S * .5, Y * .49, 0, S * .5, Y * .49, S * .7);
@@ -27,7 +28,8 @@ export function renderScene(canvas, scene, options = {}) {
   ctx.fillStyle = atmosphere; ctx.fillRect(0, 0, S, S);
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, S, Y); ctx.clip();
   ctx.globalCompositeOperation = 'screen'; ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
-  const dust = random(`${settings.seed}/atmosphere`);
+  const lightSeed = settings.rendererVersion === '1.5.0' ? settings.detailSeed : settings.seed;
+  const dust = random(`${lightSeed}/atmosphere`);
   for (let i = 0; i < 2200; i++) {
     const x = dust() * S, y = dust() * Y;
     sprite(ctx, x, y, (.00012 + dust() * .00036) * S, '#94cbbb', .035 + dust() * .08);
@@ -40,10 +42,10 @@ export function renderScene(canvas, scene, options = {}) {
     const alpha = path.alpha * settings.exposure;
     // Ribbon folds move through focus along their length. Older projects keep
     // their original endpoint-based softness for faithful reproduction.
-    const sections = ['1.3.0','1.4.0'].includes(settings.rendererVersion) ? Array.from({length:Math.ceil((path.points.length-1)/24)},(_,i)=>({points:path.points.slice(i*24,Math.min(path.points.length,i*24+25))})) : [path];
+    const sections = ['1.3.0','1.4.0','1.5.0'].includes(settings.rendererVersion) ? Array.from({length:Math.ceil((path.points.length-1)/24)},(_,i)=>({points:path.points.slice(i*24,Math.min(path.points.length,i*24+25))})) : [path];
     let dashDistance=0;
     for (const section of sections) {
-      const z = section.points[Math.floor(section.points.length/2)][2], blur = Math.max(0, Math.abs((['1.3.0','1.4.0'].includes(settings.rendererVersion) ? z : path.points.at(-1)[2]) - settings.focus) - .06) * settings.aperture;
+      const z = section.points[Math.floor(section.points.length/2)][2], blur = Math.max(0, Math.abs((['1.3.0','1.4.0','1.5.0'].includes(settings.rendererVersion) ? z : path.points.at(-1)[2]) - settings.focus) - .06) * settings.aperture;
       if (settings.glow > 0) {
         drawPath(ctx, section, S, Y, path.color, alpha * .055 * settings.glow, path.width * 12 + blur * .012);
         drawPath(ctx, section, S, Y, path.color, alpha * .11 * settings.glow, path.width * 4 + blur * .008);
@@ -53,7 +55,7 @@ export function renderScene(canvas, scene, options = {}) {
       drawPath(ctx, section, S, Y, path.color, alpha / (1 + blur * 18), path.width + blur * .004); ctx.setLineDash([]); ctx.lineDashOffset=0;
       for(let i=1;i<section.points.length;i++) dashDistance+=Math.hypot((section.points[i][0]-section.points[i-1][0])*S,(section.points[i][1]-section.points[i-1][1])*Y);
     }
-    const rng = random(`${settings.seed}/${path.id}/light`), count = path.kind === 'clinic' ? 90 : path.kind === 'submission' ? 22 : 3;
+    const rng = random(`${lightSeed}/${path.id}/light`), count = path.kind === 'clinic' ? 90 : path.kind === 'submission' ? 22 : 3;
     for (let i = 0; i < count; i++) {
       const p = pointAt(path.points, rng()), [px, py] = toPoint(p), coc = Math.max(0, Math.abs(p[2] - settings.focus) - .06) * settings.aperture, rare = rng();
       const radius = (.00025 + Math.pow(rare, 7) * .0012 + coc * .012) * S, brightness = (.18 + Math.pow(rare, 4) * .75) * settings.exposure / (1 + coc * 10);
@@ -98,7 +100,7 @@ function drawLabels(ctx, scene, S, Y) {
   for (const milestone of scene.milestones) {
     const [ax, ay] = milestone.anchor, left = ax < .45;
     let x = clamp(ax + (left ? -.10 : .07), .055, .78), y = clamp(ay + (ay > .55 ? .09 : -.10), .18, .93);
-    if (['1.3.0','1.4.0'].includes(scene.settings.rendererVersion)) {
+    if (['1.3.0','1.4.0','1.5.0'].includes(scene.settings.rendererVersion)) {
       const candidates=[];
       for(const radius of [.055,.09,.14,.20,.27]) for(let i=0;i<16;i++) {
         const angle=i*Math.PI/8, cx=clamp(ax+Math.cos(angle)*radius,.055,.78),cy=clamp(ay+Math.sin(angle)*radius,.18,.93);
@@ -128,7 +130,7 @@ function drawPoster(ctx, scene, S, Y) {
   ctx.fillStyle = '#cfe5d8'; font(ctx, S, .008, 500); tracking(ctx, 'OUR JOURNEY', S * .035, S * .865, S * .002); tracking(ctx, 'HOW TO READ', S * .365, S * .865, S * .0016);
   ctx.fillStyle = '#adc6ba'; font(ctx, S, .008);
   wrap(ctx, 'From a single order to a growing community. A living portrait of the connections that make care possible.', S * .035, S * .885, S * .26, S * .012);
-  wrap(ctx, ['1.3.0','1.4.0'].includes(scene.settings.rendererVersion) ? 'History follows the folded stream. Every clinic keeps its own continuous strand.' : 'Time spirals from the center outward. Every clinic follows its own continuous strand.', S * .365, S * .885, S * .245, S * .012);
+  wrap(ctx, ['1.3.0','1.4.0','1.5.0'].includes(scene.settings.rendererVersion) ? 'History follows the folded stream. Every clinic keeps its own continuous strand.' : 'Time spirals from the center outward. Every clinic follows its own continuous strand.', S * .365, S * .885, S * .245, S * .012);
   wrap(ctx, 'Submissions branch into pharmacies, recipients and medications. Light gathers where activity grows.', S * .67, S * .885, S * .28, S * .012);
   ctx.strokeStyle = '#a4d7c4'; ctx.lineWidth = S * .0007; ctx.beginPath(); ctx.moveTo(S * .365, S * .925); ctx.lineTo(S * .394, S * .925); ctx.stroke();
   font(ctx, S, .0068); ctx.fillText('PATIENT', S * .403, S * .928);

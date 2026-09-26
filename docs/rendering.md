@@ -26,6 +26,20 @@ The field combines a radial pull and a small tangential component. Its compact 3
 
 Lifetime here means progress along the source trail, not wall-clock simulation. The result remains reproducible as a still image. These effects are artistic structure and introduce no extra submissions or business measurements. Setting both Branch detail and Attractor strength to zero exactly restores renderer 1.3 geometry. Compare [the same seed with and without local detail](detail-comparison.jpg).
 
+## History, quiet regions and momentum (1.5)
+
+**Composition seed** controls the base branch arrangement; **Detail & light seed** independently controls wave packets, attractor selection, quiet-region placement and sparkle. Changing detail leaves the shared guide, base lane changes, topology and attachment fractions intact. The prior approved synthetic study is saved as [a renderer 1.4 project](../examples/vitl-ribbon-baseline.project.json); import it to reproduce that baseline.
+
+**History influence** blends in two existing input signals. Medication item count sets source strength relative to the median visible submission, using a logarithmic ratio capped between 0.5 and 2. Pharmacy-group keys deterministically set modest reach variation and circulation direction; these are categorical signatures, not measured pharmacy distances. At zero influence, source strengths use only the artistic variation. Formulary categories are not currently in the schema. Relative strength can change with the timeline cutoff or sample because the reference median changes.
+
+**Attractor frequency** controls the number of selected sources (up to 32); zero disables the field. **Quiet regions** adds broad, smooth variation in detail activity along the ribbon and modulates source strength, creating calmer passages beside complex ones. It does not remove business trajectories.
+
+The default **Guided ribbons** mode uses damped displacement. **Particle advection · experimental** integrates a second-order displacement with velocity, restoring force toward the moving guide, drag and arc-length substeps. This allows momentum and overshoot while retaining bounded influence and exact branch attachment. It is a guide-constrained particle model, not a fluid solver or time-based interaction among independently moving orders. Source lifetime still follows progress along a trail. No new business entities are generated.
+
+## Print inspection
+
+**Inspect print detail** renders a 900-pixel crop at the selected export resolution. Position controls move the crop; it is shown at one image pixel per CSS pixel with scrolling. Translation and canvas clipping can produce minor antialiasing differences from the equivalent full-export pixels. Intended widths of 24, 30 and 40 inches report effective pixels per inch and the physical paper area covered by the crop. Browser zoom and screen density prevent this from being an automatically calibrated physical-size display. It does not simulate paper, ink, gamut or a printer profile. Export metadata remains 300 dpi; specify the intended dimensions in the printing workflow.
+
 ## Light and depth
 
 The compositor combines constant-width cores, low-opacity halo passes, seeded point lights along those curves, decorative grain and a vignette. Solid/dashed core texture distinguishes patient and stock submissions. Paths have butt ends rather than opacity tapers. Geometry remains visible with bloom off.
@@ -38,7 +52,7 @@ The master is square. The poster reserves its bottom 16% for reading instruction
 
 Exports redraw the same paths and lights at the selected resolution, not an enlarged screenshot. PNG `pHYs` metadata specifies 300 dpi. A 7,200-pixel image is 24 inches at 300 dpi or 30 inches at 240 dpi. The browser produces RGB PNG, not a printer-specific color separation. Verify a proof with the intended paper and printing service. The largest export may exceed a mobile browser's memory, so smaller export options remain available.
 
-New projects use renderer 1.4.0. Saved 1.0.0, 1.1.0, 1.2.0 and 1.3.0 projects retain their original geometry; **Reset style** adopts the current renderer. Project files reproduce geometry and settings for the indicated renderer version. Font rasterization and Canvas antialiasing can vary by browser and operating system; byte-identical PNGs across engines are not promised. System sans-serif fonts are used without network font requests.
+New projects use renderer 1.5.0. Saved 1.0.0, 1.1.0, 1.2.0, 1.3.0 and 1.4.0 projects retain their original geometry; **Reset style** adopts the current renderer. Project files reproduce geometry and settings for the indicated renderer version. Font rasterization and Canvas antialiasing can vary by browser and operating system; byte-identical PNGs across engines are not promised. System sans-serif fonts are used without network font requests.
 
 ## Verification
 

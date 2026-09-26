@@ -25,9 +25,15 @@
       </section>
       <section>
         <div class="section-heading"><h2>Local detail</h2><span class="section-number">02</span></div>
+        <label class="field-label" for="detailSeed">Detail & light seed</label><div class="seed-row"><input id="detailSeed" type="text" maxlength="64" value="VITL-2026" spellcheck="false"><button id="reseed-detail" aria-label="Try another detail seed">↻</button></div>
         <label class="range-label" for="detail">Branch detail <output id="detail-value">0.65</output></label><input id="detail" type="range" min="0" max="1.5" step="0.05" value="0.65">
         <label class="range-label" for="attraction">Attractor strength <output id="attraction-value">0.65</output></label><input id="attraction" type="range" min="0" max="1.5" step="0.05" value="0.65">
         <label class="range-label" for="attractorRadius">Attractor reach <output id="attractorRadius-value">0.055</output></label><input id="attractorRadius" type="range" min="0.015" max="0.100" step="0.005" value="0.055">
+        <label class="range-label" for="attractorDensity">Attractor frequency <output id="attractorDensity-value">0.70</output></label><input id="attractorDensity" type="range" min="0" max="1" step="0.05" value="0.7">
+        <label class="range-label" for="quiet">Quiet regions <output id="quiet-value">0.40</output></label><input id="quiet" type="range" min="0" max="1" step="0.05" value="0.4">
+        <label class="range-label" for="dataInfluence">History influence <output id="dataInfluence-value">0.60</output></label><input id="dataInfluence" type="range" min="0" max="1" step="0.05" value="0.6">
+        <p class="privacy-note">Medication item counts shape strength; pharmacy groups shape reach and circulation. Quiet regions alternate calm and intricate passages.</p>
+        <label class="field-label" for="motion">Motion</label><select id="motion"><option value="guided">Guided ribbons</option><option value="advected">Particle advection · experimental</option></select>
         <p class="privacy-note">Small departures, eddies and clustering. Set both strengths to zero for smooth ribbons. Attractors ease in and fade out along their source trails.</p>
         <p id="detail-legacy-note" class="privacy-note" hidden>Reset the composition to enable local detail for this saved project.</p>
       </section>
@@ -42,6 +48,7 @@
       <section class="export-section">
         <div class="section-heading"><h2>Make it tangible</h2><span class="section-number">04</span></div><label class="field-label" for="export-size">PNG · square · 300 dpi metadata</label>
         <select id="export-size"><option value="2048">2,048 px · study</option><option value="4096" selected>4,096 px · detailed proof</option><option value="7200">7,200 px · 24 × 24 in at 300 dpi</option></select>
+        <button id="inspect-print" class="primary">Inspect print detail ↗</button>
         <button id="export" class="primary">Export artwork <span aria-hidden="true">↓</span></button><p class="privacy-note">Print export redraws every strand at the selected resolution. Use a desktop for the largest size.</p>
       </section>
       <details><summary>How the history becomes art</summary><p>Each clinic keeps a separate timeline strand. A submission leaves its clinic at its month, then branches into pharmacy fulfillments, recipients, and medication counts. Stock deliveries use dashed paths.</p><p>Curvature, sparkle and depth are artistic choices. Point lights are texture, not extra orders. Months preserve chronology; exact dates and patient identities are not needed.</p><label class="field-label" for="maxSubmissions">Submission drawing budget</label><select id="maxSubmissions"><option value="1800">1,800 · balanced</option><option value="4000">4,000 · dense</option><option value="20000">20,000 · full history, slower</option></select><p>If the history exceeds this budget, a repeatable sample is shown and labeled. Counts below always distinguish drawn and available submissions.</p></details>
@@ -54,6 +61,16 @@
       <div class="stats" aria-label="History statistics"><div><strong id="count-submissions">—</strong><span>submissions drawn</span></div><div><strong id="count-clinics">—</strong><span>active clinic strands</span></div><div><strong id="count-pharmacies">—</strong><span>pharmacies in history</span></div><div><strong id="count-tracks">—</strong><span>connected trajectories</span></div></div>
       <p id="status" role="status" aria-live="polite">Preparing your first study…</p><p id="error" role="alert" hidden></p>
     </section>
-  </main><noscript>This studio needs JavaScript to trace and render its artwork.</noscript>
+  </main>
+  <dialog id="print-dialog" aria-labelledby="print-title">
+    <div class="section-heading"><h2 id="print-title">Print detail · 1 image pixel per CSS pixel</h2><button id="close-print" autofocus>Close ✕</button></div>
+    <p>Inspect freshly rendered export detail. Scroll to see the full crop. Physical screen size depends on your display and browser zoom; this is not a paper or color proof.</p>
+    <label class="field-label" for="print-inches">Intended square print width</label><select id="print-inches"><option value="24">24 inches</option><option value="30">30 inches</option><option value="40">40 inches</option></select>
+    <label class="range-label" for="crop-x">Crop horizontal position</label><input id="crop-x" type="range" min="0" max="1" step="0.01" value="0.65">
+    <label class="range-label" for="crop-y">Crop vertical position</label><input id="crop-y" type="range" min="0" max="1" step="0.01" value="0.64">
+    <p id="print-scale" role="status"></p><button id="refresh-print" class="primary">Render this crop</button>
+    <div class="print-scroll"><canvas id="print-crop" width="900" height="900" role="img" aria-label="Print detail crop"></canvas></div>
+  </dialog>
+  <noscript>This studio needs JavaScript to trace and render its artwork.</noscript>
 </body>
 </html>

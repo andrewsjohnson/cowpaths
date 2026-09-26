@@ -28,13 +28,17 @@ The studio uses native JavaScript modules and Canvas 2D. Geometry and rendering 
 - Import a JSON history or reopen a saved project.
 - Scrub the history month by month or play its growth.
 - Adjust seed, branch reach, flow variation, palette, bloom, exposure, focus and depth softness.
+- Keep composition fixed while changing an independent detail/light seed.
+- Vary quiet regions and attractor frequency; let medication counts and pharmacy groups influence the field.
+- Try optional particle advection with momentum around the guide. Guided ribbons remain the default.
+- Inspect a freshly rendered print crop with effective resolution and paper-size calculations.
 - Add multiscale branch detail and weak trail-following attractors with adjustable strength and reach. Their influence eases in and fades out along each source trail.
 - Toggle milestone annotations and the poster typography/legend.
 - Export a square PNG at 2,048, 4,096 or 7,200 pixels. The latter is 24 × 24 inches at 300 dpi. PNG physical-density metadata is included.
 - Save the validated input and settings as a versioned JSON project. Older projects retain their original flow; **Reset style** adopts the current geometry.
 - Choose a submission budget. Above that budget, a deterministic sample is explicitly reported; the renderer never invents replacement submissions.
 
-[Compare smooth ribbons with local detail and attractors](docs/detail-comparison.jpg). Both panels use the same synthetic history and seed.
+[Compare smooth ribbons with local detail and attractors](docs/detail-comparison.jpg). Both panels use the same synthetic history and seed. The [previously approved ribbon baseline](examples/vitl-ribbon-baseline.project.json) is preserved as an importable project.
 
 ## Use your company history
 
@@ -82,7 +86,7 @@ The historical dependency set is preserved. The new studio does not import it. O
 
 ## Verification
 
-`npm test` runs eighteen contracts covering hierarchy counts, branch attachment and departure angles, separate clinic lanes and a framed ribbon silhouette, determinism, attractor lifetimes/locality/bounds, zero-detail compatibility, timeline cutoffs, sampling, medication-count changes, input rejection, current and legacy project round trips, CSV conversion and PNG density metadata.
+`npm test` runs twenty-two contracts covering hierarchy counts, branch attachment and departure angles, separate clinic lanes and a framed ribbon silhouette, determinism, attractor lifetimes/locality/bounds, zero-detail compatibility, timeline cutoffs, sampling, medication-count changes, input rejection, current and legacy project round trips, CSV conversion and PNG density metadata.
 
 An optional browser integration check requires a separately supplied Playwright installation and Chromium binary:
 
@@ -98,6 +102,7 @@ It checks the worker and fallback renderer, imports, invalid-file handling, proj
 | --- | --- |
 | `src/journey/data.mjs` | Input validation and synthetic history |
 | `src/journey/scene.mjs` | Deterministic hierarchy and current geometry |
+| `src/journey/attractors-v14.mjs` | Frozen detail geometry for saved 1.4 projects |
 | `src/journey/attractors.mjs` | Multiscale divergence and bounded trail-following fields |
 | `src/journey/ribbon.mjs` | Shared 3D ribbon and smooth attached branches |
 | `src/journey/scene-v1.mjs`, `scene-v2.mjs` | Geometry compatibility for saved 1.0–1.2 projects |
