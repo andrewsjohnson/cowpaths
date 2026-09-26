@@ -1,0 +1,20 @@
+{
+  "browser": "138.0.7204.0",
+  "readyMs": 1228,
+  "submissions": 947,
+  "cases": [
+    "worker render",
+    "import",
+    "invalid import preserves study",
+    "timeline cutoff",
+    "seed changes canvas",
+    "project reproduces canvas",
+    "2048px export and 300dpi metadata",
+    "mobile no overflow",
+    "focus view",
+    "main-thread fallback",
+    "7200px print export"
+  ],
+  "errors": [],
+  "externalRequests": []
+}
